@@ -1,6 +1,6 @@
 const express = require('express');
 const { verifyFirebaseToken } = require('../config/firebase');
-const { authenticateUser } = require('../middleware/auth');
+const { authenticateUser, optionalAuth } = require('../middleware/auth');
 
 const router = express.Router();
 
