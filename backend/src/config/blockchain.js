@@ -143,9 +143,15 @@ class BlockchainService {
 
       const hashBytes32 = dataHash.startsWith('0x') ? dataHash : '0x' + dataHash;
       
-      // Query events
+      // Get current block number
+      const currentBlock = await this.provider.getBlockNumber();
+      
+      // Limit the search to the last 10,000 blocks to avoid RPC limits
+      const fromBlock = Math.max(0, currentBlock - 10000);
+      
+      // Query events with limited block range
       const filter = this.contract.filters.ProofCreated(hashBytes32);
-      const events = await this.contract.queryFilter(filter);
+      const events = await this.contract.queryFilter(filter, fromBlock, 'latest');
       
       return events.map(event => ({
         transactionHash: event.transactionHash,
