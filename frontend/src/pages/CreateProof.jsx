@@ -4,7 +4,7 @@ import toast from 'react-hot-toast';
 import { useAuth } from '../contexts/AuthContext';
 
 const CreateProof = () => {
-  const { getAuthHeaders } = useAuth();
+  const { user, login, getAuthHeaders } = useAuth();
   const [activeTab, setActiveTab] = useState('text');
   const [textContent, setTextContent] = useState('');
   const [selectedFile, setSelectedFile] = useState(null);
@@ -125,19 +125,52 @@ const CreateProof = () => {
 
   return (
     <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-      <div className="text-center mb-12 animate-slide-down">
-        <div className="relative inline-block mb-6">
-          <Hash className="h-16 w-16 text-primary-400 mx-auto floating-element" />
-          <div className="absolute inset-0 h-16 w-16 bg-primary-400/20 rounded-full blur-xl mx-auto animate-pulse-slow"></div>
+      {!user ? (
+        // Authentication required message
+        <div className="text-center animate-slide-down">
+          <div className="relative inline-block mb-6">
+            <AlertCircle className="h-16 w-16 text-amber-400 mx-auto floating-element" />
+            <div className="absolute inset-0 h-16 w-16 bg-amber-400/20 rounded-full blur-xl mx-auto animate-pulse-slow"></div>
+          </div>
+          
+          <h1 className="text-4xl md:text-6xl font-bold gradient-text mb-6">
+            Authentication Required
+          </h1>
+          <p className="text-xl text-gray-300 max-w-3xl mx-auto mb-8">
+            You need to sign in to create proofs of existence. This ensures accountability and prevents spam.
+          </p>
+          
+          <div className="card-glass max-w-md mx-auto">
+            <div className="text-center">
+              <h3 className="text-2xl font-bold text-white mb-4">Sign In to Continue</h3>
+              <p className="text-gray-300 mb-6">
+                Create immutable proofs of your data with blockchain technology
+              </p>
+              <button
+                onClick={login}
+                className="btn btn-primary w-full"
+              >
+                <ExternalLink className="h-5 w-5 mr-2" />
+                Sign in with Google
+              </button>
+            </div>
+          </div>
         </div>
-        
-        <h1 className="text-4xl md:text-6xl font-bold gradient-text mb-6">
-          Create Proof of Existence
-        </h1>
-        <p className="text-xl text-gray-300 max-w-3xl mx-auto">
-          Generate an immutable proof that your data existed at this moment in time
-        </p>
-      </div>
+      ) : (
+        <>
+          <div className="text-center mb-12 animate-slide-down">
+            <div className="relative inline-block mb-6">
+              <Hash className="h-16 w-16 text-primary-400 mx-auto floating-element" />
+              <div className="absolute inset-0 h-16 w-16 bg-primary-400/20 rounded-full blur-xl mx-auto animate-pulse-slow"></div>
+            </div>
+            
+            <h1 className="text-4xl md:text-6xl font-bold gradient-text mb-6">
+              Create Proof of Existence
+            </h1>
+            <p className="text-xl text-gray-300 max-w-3xl mx-auto">
+              Generate an immutable proof that your data existed at this moment in time
+            </p>
+          </div>
 
       {!proof ? (
         <div className="card-glass max-w-4xl mx-auto animate-scale-in">
@@ -442,6 +475,8 @@ const CreateProof = () => {
             </div>
           </div>
         </div>
+      )}
+        </>
       )}
     </div>
   );

@@ -2,7 +2,7 @@ const express = require('express');
 const crypto = require('crypto');
 const multer = require('multer');
 const blockchainService = require('../config/blockchain');
-const { optionalAuth } = require('../middleware/auth');
+const { authenticateUser, optionalAuth } = require('../middleware/auth');
 
 const router = express.Router();
 
@@ -24,7 +24,7 @@ const computeHash = (data) => {
 };
 
 // Create proof from text
-router.post('/text', optionalAuth, async (req, res) => {
+router.post('/text', authenticateUser, async (req, res) => {
   try {
     const { text } = req.body;
     
@@ -58,7 +58,7 @@ router.post('/text', optionalAuth, async (req, res) => {
         timestamp: proofResult.timestamp,
         gasUsed: proofResult.gasUsed,
         type: 'text',
-        user: req.user?.email || 'anonymous'
+        user: req.user.email
       },
       message: 'Proof created successfully'
     });
@@ -81,7 +81,7 @@ router.post('/text', optionalAuth, async (req, res) => {
 });
 
 // Create proof from file
-router.post('/file', optionalAuth, upload.single('file'), async (req, res) => {
+router.post('/file', authenticateUser, upload.single('file'), async (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({
@@ -111,7 +111,7 @@ router.post('/file', optionalAuth, upload.single('file'), async (req, res) => {
         fileName: originalname,
         fileType: mimetype,
         fileSize: size,
-        user: req.user?.email || 'anonymous'
+        user: req.user.email
       },
       message: 'Proof created successfully'
     });
