@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { FileText, Upload, Hash, Clock, ExternalLink, Sparkles, Copy, CheckCircle2, AlertCircle } from 'lucide-react';
+import { ExternalLink, AlertCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -50,10 +50,9 @@ const CreateProof = () => {
 
   const createTextProof = async () => {
     if (!textContent.trim()) {
-      toast.error('Please enter some text');
+      toast.error('Please enter some text content');
       return;
     }
-
     setLoading(true);
     try {
       const response = await fetch('/api/proof/text', {
@@ -69,7 +68,7 @@ const CreateProof = () => {
 
       if (data.success) {
         setProof(data.proof);
-        toast.success('🎉 Proof created successfully!');
+        toast.success('Proof created successfully!');
       } else {
         toast.error(data.message || 'Failed to create proof');
       }
@@ -102,7 +101,7 @@ const CreateProof = () => {
 
       if (data.success) {
         setProof(data.proof);
-        toast.success('🎉 Proof created successfully!');
+        toast.success('Proof created successfully!');
       } else {
         toast.error(data.message || 'Failed to create proof');
       }
@@ -114,368 +113,352 @@ const CreateProof = () => {
     }
   };
 
-  const formatTimestamp = (timestamp) => {
-    return new Date(timestamp * 1000).toLocaleString();
-  };
-
   const copyToClipboard = (text) => {
     navigator.clipboard.writeText(text);
-    toast.success('📋 Copied to clipboard!');
+    toast.success('Copied to clipboard!');
   };
 
+  const formatFileSize = (bytes) => {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  };
   return (
-    <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+    <div className="relative z-10 pt-32 pb-20 px-6 max-w-7xl mx-auto flex flex-col items-center">
+      {/* Background Effects */}
+      <div className="fixed inset-0 z-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-[-20%] left-[-10%] w-[60%] h-[60%] rounded-full bg-indigo-900/20 blur-[130px]"></div>
+        <div className="absolute bottom-[-20%] right-[-10%] w-[60%] h-[60%] rounded-full bg-violet-900/20 blur-[130px]"></div>
+        <div className="absolute top-[30%] left-[50%] -translate-x-1/2 w-[40%] h-[40%] rounded-full bg-blue-900/10 blur-[100px]"></div>
+      </div>
+
       {!user ? (
         // Authentication required message
-        <div className="text-center animate-slide-down">
-          <div className="relative inline-block mb-6">
-            <AlertCircle className="h-16 w-16 text-amber-400 mx-auto floating-element" />
-            <div className="absolute inset-0 h-16 w-16 bg-amber-400/20 rounded-full blur-xl mx-auto animate-pulse-slow"></div>
+        <div className="text-center max-w-3xl mb-12 space-y-4">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-300 text-xs font-medium tracking-wide">
+            <AlertCircle className="w-3 h-3" />
+            Authentication Required
           </div>
           
-          <h1 className="text-4xl md:text-6xl font-bold gradient-text mb-6">
-            Authentication Required
+          <h1 className="text-5xl md:text-6xl font-bold tracking-tight text-white">
+            Sign In to Create <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 via-violet-400 to-indigo-400">Proofs</span>
           </h1>
-          <p className="text-xl text-gray-300 max-w-3xl mx-auto mb-8">
-            You need to sign in to create proofs of existence. This ensures accountability and prevents spam.
-          </p>
           
-          <div className="card-glass max-w-md mx-auto">
-            <div className="text-center">
-              <h3 className="text-2xl font-bold text-white mb-4">Sign In to Continue</h3>
-              <p className="text-gray-300 mb-6">
-                Create immutable proofs of your data with blockchain technology
-              </p>
-              <button
-                onClick={login}
-                className="btn btn-primary w-full"
-              >
-                <ExternalLink className="h-5 w-5 mr-2" />
-                Sign in with Google
-              </button>
+          <p className="text-lg text-slate-400 max-w-2xl mx-auto font-light leading-relaxed">
+            Authentication ensures accountability and prevents spam. Your proofs will be linked to your verified identity.
+          </p>
+
+          <div className="w-full max-w-md mx-auto mt-8">
+            <div className="relative group">
+              <div className="absolute -inset-1 bg-gradient-to-r from-indigo-500 via-violet-500 to-blue-500 rounded-2xl blur-xl opacity-20 group-hover:opacity-30 transition duration-1000"></div>
+              <div className="relative bg-slate-900/40 backdrop-blur-xl border border-white/10 shadow-2xl rounded-2xl p-8">
+                <div className="text-center">
+                  <h3 className="text-2xl font-bold text-white mb-4">Get Started</h3>
+                  <p className="text-slate-400 mb-6">
+                    Create immutable proofs with blockchain technology
+                  </p>
+                  <button
+                    onClick={login}
+                    className="w-full bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white shadow-lg shadow-indigo-500/25 py-4 px-6 rounded-xl font-semibold text-sm tracking-wide transform active:scale-[0.98] transition-all flex items-center justify-center gap-2"
+                  >
+                    <ExternalLink className="h-5 w-5" />
+                    Sign in with Google
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         </div>
       ) : (
         <>
-          <div className="text-center mb-12 animate-slide-down">
-            <div className="relative inline-block mb-6">
-              <Hash className="h-16 w-16 text-primary-400 mx-auto floating-element" />
-              <div className="absolute inset-0 h-16 w-16 bg-primary-400/20 rounded-full blur-xl mx-auto animate-pulse-slow"></div>
+          {/* Header */}
+          <div className="text-center max-w-3xl mb-12 space-y-4">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-300 text-xs font-medium tracking-wide">
+              <span className="w-1.5 h-1.5 rounded-full bg-indigo-400 animate-pulse"></span>
+              Decentralized Notary Service
             </div>
             
-            <h1 className="text-4xl md:text-6xl font-bold gradient-text mb-6">
-              Create Proof of Existence
+            <h1 className="text-5xl md:text-6xl font-bold tracking-tight text-white">
+              Immutable Proof of <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 via-violet-400 to-indigo-400">Existence</span>
             </h1>
-            <p className="text-xl text-gray-300 max-w-3xl mx-auto">
-              Generate an immutable proof that your data existed at this moment in time
+            
+            <p className="text-lg text-slate-400 max-w-2xl mx-auto font-light leading-relaxed">
+              Securely anchor your documents to the blockchain. We generate a cryptographic hash of your data—your files never leave your device.
             </p>
           </div>
+          {!proof ? (
+            /* Main Form */
+            <div className="w-full max-w-4xl relative group">
+              <div className="absolute -inset-1 bg-gradient-to-r from-indigo-500 via-violet-500 to-blue-500 rounded-3xl blur-xl opacity-20 group-hover:opacity-30 transition duration-1000"></div>
+              <div className="relative bg-slate-900/40 backdrop-blur-xl border border-white/10 shadow-2xl rounded-2xl overflow-hidden flex flex-col">
+                
+                {/* Tab Navigation */}
+                <div className="border-b border-white/5 bg-slate-900/30">
+                  <div className="flex">
+                    <button
+                      onClick={() => setActiveTab('text')}
+                      className={`flex-1 py-5 text-sm font-medium border-b-2 transition-colors flex items-center justify-center gap-2 ${
+                        activeTab === 'text'
+                          ? 'text-white border-indigo-500 bg-white/[0.02]'
+                          : 'text-slate-500 hover:text-slate-300 border-transparent hover:bg-white/[0.01]'
+                      }`}
+                    >
+                      <span className="material-symbols-outlined text-indigo-400">description</span>
+                      Text Proof
+                    </button>
+                    <button
+                      onClick={() => setActiveTab('file')}
+                      className={`flex-1 py-5 text-sm font-medium border-b-2 transition-colors flex items-center justify-center gap-2 ${
+                        activeTab === 'file'
+                          ? 'text-white border-indigo-500 bg-white/[0.02]'
+                          : 'text-slate-500 hover:text-slate-300 border-transparent hover:bg-white/[0.01]'
+                      }`}
+                    >
+                      <span className="material-symbols-outlined">folder_open</span>
+                      File Proof
+                    </button>
+                  </div>
+                </div>
 
-      {!proof ? (
-        <div className="card-glass max-w-4xl mx-auto animate-scale-in">
-          {/* Tab Navigation */}
-          <div className="flex border-b border-white/20 mb-8">
-            {[
-              { id: 'text', icon: FileText, label: 'Text Content' },
-              { id: 'file', icon: Upload, label: 'File Upload' }
-            ].map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center space-x-3 px-6 py-4 font-semibold text-lg border-b-2 transition-all duration-300 ${
-                  activeTab === tab.id
-                    ? 'border-primary-500 text-primary-400 bg-primary-500/10'
-                    : 'border-transparent text-gray-400 hover:text-white hover:bg-white/5'
-                }`}
-              >
-                <tab.icon className="h-5 w-5" />
-                <span>{tab.label}</span>
-              </button>
-            ))}
-          </div>
+                {/* Content */}
+                <div className="p-8 md:p-10 space-y-8">
+                  {activeTab === 'text' ? (
+                    /* Text Tab */
+                    <div className="space-y-4">
+                      <div className="flex justify-between items-end">
+                        <label className="text-sm font-medium text-slate-300" htmlFor="proof-data">
+                          Content to Certify
+                        </label>
+                        <span className="text-xs text-slate-500 font-mono">SHA-256 Hashing Algorithm</span>
+                      </div>
+                      
+                      <div className="relative group/input">
+                        <textarea
+                          className="w-full bg-slate-950/50 border border-white/10 rounded-xl p-6 text-slate-200 placeholder-slate-600 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50 transition-all min-h-[300px] resize-none font-mono text-sm leading-relaxed shadow-inner"
+                          id="proof-data"
+                          placeholder="Enter the text, contract, or data string you wish to timestamp on the blockchain..."
+                          value={textContent}
+                          onChange={(e) => setTextContent(e.target.value)}
+                        />
+                        <div className="absolute bottom-4 right-4 flex items-center gap-3">
+                          <button
+                            onClick={() => copyToClipboard(textContent)}
+                            className="p-1.5 rounded hover:bg-white/10 text-slate-500 hover:text-slate-300 transition-colors"
+                            title="Copy"
+                            disabled={!textContent}
+                          >
+                            <span className="material-symbols-outlined text-[18px]">content_copy</span>
+                          </button>
+                          <div className="h-4 w-px bg-white/10"></div>
+                          <span className="text-xs text-slate-500 font-mono">{textContent.length} characters</span>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    /* File Tab */
+                    <div className="space-y-4">
+                      <div className="flex justify-between items-end">
+                        <label className="text-sm font-medium text-slate-300">
+                          File to Certify
+                        </label>
+                        <span className="text-xs text-slate-500 font-mono">Max 10MB</span>
+                      </div>
+                      
+                      <div
+                        className={`relative border-2 border-dashed rounded-xl p-8 text-center transition-all ${
+                          dragActive
+                            ? 'border-indigo-500 bg-indigo-500/5'
+                            : 'border-white/20 hover:border-white/30'
+                        }`}
+                        onDragEnter={handleDrag}
+                        onDragLeave={handleDrag}
+                        onDragOver={handleDrag}
+                        onDrop={handleDrop}
+                      >
+                        <input
+                          type="file"
+                          onChange={handleFileSelect}
+                          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                          accept="*/*"
+                        />
+                        
+                        {selectedFile ? (
+                          <div className="space-y-3">
+                            <span className="material-symbols-outlined text-4xl text-indigo-400">description</span>
+                            <div>
+                              <p className="text-slate-200 font-medium">{selectedFile.name}</p>
+                              <p className="text-slate-500 text-sm">{formatFileSize(selectedFile.size)}</p>
+                            </div>
+                            <button
+                              onClick={() => setSelectedFile(null)}
+                              className="text-xs text-slate-500 hover:text-slate-300 underline"
+                            >
+                              Remove file
+                            </button>
+                          </div>
+                        ) : (
+                          <div className="space-y-3">
+                            <span className="material-symbols-outlined text-4xl text-slate-500">cloud_upload</span>
+                            <div>
+                              <p className="text-slate-300">Drop your file here or click to browse</p>
+                              <p className="text-slate-500 text-sm">Any file type supported, up to 10MB</p>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
 
-          {/* Text Tab */}
-          {activeTab === 'text' && (
-            <div className="animate-fade-in">
-              <label className="block text-lg font-semibold text-white mb-4">
-                Enter your text content
-              </label>
-              <div className="relative">
-                <textarea
-                  value={textContent}
-                  onChange={(e) => setTextContent(e.target.value)}
-                  placeholder="Enter the text you want to prove existed..."
-                  className="input h-40 resize-none text-lg"
-                  disabled={loading}
-                />
-                <div className="absolute bottom-4 right-4 text-sm text-gray-400">
-                  {textContent.length} characters
+                  {/* Privacy Notice */}
+                  <div className="flex items-start gap-3 p-4 rounded-lg bg-indigo-500/5 border border-indigo-500/10">
+                    <span className="material-symbols-outlined text-indigo-400 text-[20px] mt-0.5">privacy_tip</span>
+                    <div>
+                      <h4 className="text-sm font-medium text-indigo-200">Zero-Knowledge Privacy</h4>
+                      <p className="text-xs text-indigo-300/70 mt-1">
+                        Your data is hashed locally in your browser. We only receive the cryptographic fingerprint (hash), 
+                        ensuring your original content remains completely private.
+                      </p>
+                    </div>
+                  </div>
+                  {/* Action Bar */}
+                  <div className="flex flex-col md:flex-row items-center justify-between gap-6 pt-6 border-t border-white/5">
+                    <div className="flex items-center gap-4 w-full md:w-auto">
+                      <div className="flex flex-col">
+                        <span className="text-xs text-slate-500 uppercase tracking-wider font-semibold">Network Fee</span>
+                        <div className="flex items-baseline gap-1.5">
+                          <span className="text-lg font-bold text-white">0.002 ETH</span>
+                          <span className="text-xs text-slate-500">($3.54 USD)</span>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <button
+                      onClick={activeTab === 'text' ? createTextProof : createFileProof}
+                      disabled={loading || (activeTab === 'text' ? !textContent.trim() : !selectedFile)}
+                      className="w-full md:w-auto bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white shadow-lg shadow-indigo-500/25 py-4 px-10 rounded-xl font-semibold text-sm tracking-wide transform active:scale-[0.98] transition-all flex items-center justify-center gap-2 group/btn disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {loading ? (
+                        <>
+                          <div className="animate-spin rounded-full h-4 w-4 border-2 border-white/30 border-t-white"></div>
+                          Creating Proof...
+                        </>
+                      ) : (
+                        <>
+                          <span className="material-symbols-outlined group-hover/btn:rotate-12 transition-transform">fingerprint</span>
+                          Generate Proof
+                        </>
+                      )}
+                    </button>
+                  </div>
                 </div>
               </div>
-              <p className="text-gray-400 mt-3 flex items-center space-x-2">
-                <AlertCircle className="h-4 w-4" />
-                <span>Maximum 1MB of text content</span>
-              </p>
-              
-              <button
-                onClick={createTextProof}
-                disabled={loading || !textContent.trim()}
-                className="btn btn-primary w-full mt-8 text-lg py-4 group relative overflow-hidden"
-              >
-                {loading ? (
-                  <div className="flex items-center justify-center space-x-3">
-                    <div className="animate-spin rounded-full h-6 w-6 border-2 border-white/30 border-t-white"></div>
-                    <span>Creating Proof...</span>
+            </div>
+          ) : (
+            /* Success State */
+            <div className="w-full max-w-4xl relative group">
+              <div className="absolute -inset-1 bg-gradient-to-r from-green-500 via-emerald-500 to-teal-500 rounded-3xl blur-xl opacity-20 group-hover:opacity-30 transition duration-1000"></div>
+              <div className="relative bg-slate-900/40 backdrop-blur-xl border border-white/10 shadow-2xl rounded-2xl p-8 md:p-10">
+                <div className="text-center space-y-6">
+                  <div className="w-16 h-16 mx-auto bg-green-500/20 rounded-full flex items-center justify-center">
+                    <span className="material-symbols-outlined text-green-400 text-3xl">verified</span>
                   </div>
-                ) : (
-                  <span className="flex items-center justify-center space-x-3">
-                    <Sparkles className="h-6 w-6 group-hover:animate-spin" />
-                    <span>Create Proof</span>
-                    <Hash className="h-5 w-5" />
-                  </span>
-                )}
-              </button>
+                  
+                  <div>
+                    <h2 className="text-3xl font-bold text-white mb-2">Proof Created Successfully!</h2>
+                    <p className="text-slate-400">Your data has been permanently anchored to the blockchain</p>
+                  </div>
+                  <div className="bg-slate-950/50 rounded-xl p-6 space-y-4 text-left">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="text-xs text-slate-500 uppercase tracking-wider font-semibold">Hash</label>
+                        <div className="flex items-center gap-2 mt-1">
+                          <code className="text-sm font-mono text-slate-200 break-all">{proof.hash}</code>
+                          <button
+                            onClick={() => copyToClipboard(proof.hash)}
+                            className="p-1 rounded hover:bg-white/10 text-slate-500 hover:text-slate-300 transition-colors"
+                          >
+                            <span className="material-symbols-outlined text-[16px]">content_copy</span>
+                          </button>
+                        </div>
+                      </div>
+                      
+                      <div>
+                        <label className="text-xs text-slate-500 uppercase tracking-wider font-semibold">Transaction</label>
+                        <div className="flex items-center gap-2 mt-1">
+                          <code className="text-sm font-mono text-slate-200 break-all">{proof.transactionHash}</code>
+                          <button
+                            onClick={() => copyToClipboard(proof.transactionHash)}
+                            className="p-1 rounded hover:bg-white/10 text-slate-500 hover:text-slate-300 transition-colors"
+                          >
+                            <span className="material-symbols-outlined text-[16px]">content_copy</span>
+                          </button>
+                        </div>
+                      </div>
+                      
+                      <div>
+                        <label className="text-xs text-slate-500 uppercase tracking-wider font-semibold">Block Number</label>
+                        <p className="text-sm font-mono text-slate-200 mt-1">{proof.blockNumber}</p>
+                      </div>
+                      
+                      <div>
+                        <label className="text-xs text-slate-500 uppercase tracking-wider font-semibold">Timestamp</label>
+                        <p className="text-sm font-mono text-slate-200 mt-1">
+                          {new Date(proof.timestamp * 1000).toLocaleString()}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col md:flex-row gap-4">
+                    <button
+                      onClick={() => {
+                        setProof(null);
+                        setTextContent('');
+                        setSelectedFile(null);
+                      }}
+                      className="flex-1 bg-white/5 hover:bg-white/10 text-white border border-white/10 py-3 px-6 rounded-xl font-medium transition-all"
+                    >
+                      Create Another Proof
+                    </button>
+                    <button
+                      onClick={() => window.location.href = '/verify'}
+                      className="flex-1 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white shadow-lg shadow-indigo-500/25 py-3 px-6 rounded-xl font-medium transition-all"
+                    >
+                      Verify a Proof
+                    </button>
+                  </div>
+                </div>
+              </div>
             </div>
           )}
-
-          {/* File Tab */}
-          {activeTab === 'file' && (
-            <div className="animate-fade-in">
-              <label className="block text-lg font-semibold text-white mb-4">
-                Select or drop a file
-              </label>
-              
-              <div 
-                className={`relative border-2 border-dashed rounded-2xl p-12 text-center transition-all duration-300 ${
-                  dragActive 
-                    ? 'border-primary-400 bg-primary-500/10 scale-105' 
-                    : 'border-white/30 hover:border-primary-400/50 hover:bg-white/5'
-                }`}
-                onDragEnter={handleDrag}
-                onDragLeave={handleDrag}
-                onDragOver={handleDrag}
-                onDrop={handleDrop}
-              >
-                <div className="relative">
-                  <Upload className={`h-16 w-16 mx-auto mb-6 transition-all duration-300 ${
-                    dragActive ? 'text-primary-400 scale-110' : 'text-gray-400'
-                  }`} />
-                  <div className="absolute inset-0 h-16 w-16 bg-primary-400/20 rounded-full blur-xl mx-auto opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                </div>
-                
-                <input
-                  type="file"
-                  onChange={handleFileSelect}
-                  className="hidden"
-                  id="file-upload"
-                  disabled={loading}
-                />
-                
-                <label
-                  htmlFor="file-upload"
-                  className="cursor-pointer text-primary-400 hover:text-primary-300 font-semibold text-lg transition-colors"
-                >
-                  Choose a file or drag & drop
-                </label>
-                
-                <p className="text-gray-400 mt-3 flex items-center justify-center space-x-2">
-                  <AlertCircle className="h-4 w-4" />
-                  <span>Maximum file size: 10MB</span>
-                </p>
+          {/* Features */}
+          <div className="mt-16 grid grid-cols-1 md:grid-cols-3 gap-8 text-center max-w-4xl w-full">
+            <div className="p-4 rounded-xl hover:bg-white/[0.02] transition-colors group">
+              <div className="w-12 h-12 mx-auto bg-slate-900 rounded-full flex items-center justify-center border border-white/5 mb-4 shadow-lg group-hover:scale-110 transition-transform">
+                <span className="material-symbols-outlined text-indigo-400">lock_clock</span>
               </div>
-              
-              {selectedFile && (
-                <div className="mt-6 p-6 bg-white/5 backdrop-blur-sm rounded-xl border border-white/20 animate-slide-up">
-                  <div className="flex items-center space-x-4">
-                    <div className="bg-gradient-to-r from-primary-500 to-secondary-500 rounded-lg p-3">
-                      <FileText className="h-6 w-6 text-white" />
-                    </div>
-                    <div className="flex-1">
-                      <p className="font-semibold text-white text-lg">
-                        {selectedFile.name}
-                      </p>
-                      <p className="text-gray-400">
-                        {(selectedFile.size / 1024 / 1024).toFixed(2)} MB • {selectedFile.type || 'Unknown type'}
-                      </p>
-                    </div>
-                    <CheckCircle2 className="h-6 w-6 text-green-400" />
-                  </div>
-                </div>
-              )}
-
-              <button
-                onClick={createFileProof}
-                disabled={loading || !selectedFile}
-                className="btn btn-primary w-full mt-8 text-lg py-4 group relative overflow-hidden"
-              >
-                {loading ? (
-                  <div className="flex items-center justify-center space-x-3">
-                    <div className="animate-spin rounded-full h-6 w-6 border-2 border-white/30 border-t-white"></div>
-                    <span>Creating Proof...</span>
-                  </div>
-                ) : (
-                  <span className="flex items-center justify-center space-x-3">
-                    <Sparkles className="h-6 w-6 group-hover:animate-spin" />
-                    <span>Create Proof</span>
-                    <Hash className="h-5 w-5" />
-                  </span>
-                )}
-              </button>
-            </div>
-          )}
-        </div>
-      ) : (
-        /* Proof Result */
-        <div className="card-glass max-w-5xl mx-auto animate-scale-in">
-          <div className="text-center mb-10">
-            <div className="relative inline-block mb-6">
-              <div className="bg-gradient-to-r from-green-500 to-emerald-500 rounded-full p-6 w-20 h-20 mx-auto glow-effect">
-                <CheckCircle2 className="h-8 w-8 text-white" />
-              </div>
-              <div className="absolute inset-0 bg-green-400/20 rounded-full blur-2xl animate-pulse-slow"></div>
+              <h3 className="text-slate-200 font-medium mb-1">Timestamped</h3>
+              <p className="text-sm text-slate-500">Irrefutable proof of when the data existed.</p>
             </div>
             
-            <h2 className="text-3xl md:text-5xl font-bold gradient-text mb-4">
-              Proof Created Successfully!
-            </h2>
-            <p className="text-xl text-gray-300">
-              Your data has been timestamped on the blockchain
-            </p>
-          </div>
-
-          <div className="space-y-8">
-            <div className="gradient-border">
-              <div className="gradient-border-content p-6">
-                <label className="block text-lg font-semibold text-white mb-3 flex items-center space-x-2">
-                  <Hash className="h-5 w-5 text-primary-400" />
-                  <span>Content Hash (SHA-256)</span>
-                </label>
-                <div className="hash-display flex items-center justify-between group">
-                  <span className="flex-1 text-primary-300">{proof.hash}</span>
-                  <button
-                    onClick={() => copyToClipboard(proof.hash)}
-                    className="ml-4 p-2 text-primary-400 hover:text-primary-300 hover:bg-primary-500/20 rounded-lg transition-all duration-300"
-                  >
-                    <Copy className="h-5 w-5" />
-                  </button>
-                </div>
+            <div className="p-4 rounded-xl hover:bg-white/[0.02] transition-colors group">
+              <div className="w-12 h-12 mx-auto bg-slate-900 rounded-full flex items-center justify-center border border-white/5 mb-4 shadow-lg group-hover:scale-110 transition-transform">
+                <span className="material-symbols-outlined text-violet-400">link</span>
               </div>
-            </div>
-
-            <div className="grid md:grid-cols-2 gap-6">
-              <div className="gradient-border">
-                <div className="gradient-border-content p-6">
-                  <label className="block text-lg font-semibold text-white mb-3">
-                    Transaction Hash
-                  </label>
-                  <div className="hash-display flex items-center justify-between">
-                    <span className="flex-1 truncate text-secondary-300">{proof.transactionHash}</span>
-                    <div className="flex items-center space-x-2 ml-4">
-                      <button
-                        onClick={() => copyToClipboard(proof.transactionHash)}
-                        className="p-2 text-secondary-400 hover:text-secondary-300 hover:bg-secondary-500/20 rounded-lg transition-all duration-300"
-                      >
-                        <Copy className="h-4 w-4" />
-                      </button>
-                      <a
-                        href={`https://sepolia.etherscan.io/tx/${proof.transactionHash}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="p-2 text-secondary-400 hover:text-secondary-300 hover:bg-secondary-500/20 rounded-lg transition-all duration-300"
-                      >
-                        <ExternalLink className="h-4 w-4" />
-                      </a>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="gradient-border">
-                <div className="gradient-border-content p-6">
-                  <label className="block text-lg font-semibold text-white mb-3">
-                    Block Number
-                  </label>
-                  <div className="hash-display text-accent-300 text-xl font-mono">
-                    #{proof.blockNumber}
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="gradient-border">
-              <div className="gradient-border-content p-6">
-                <label className="block text-lg font-semibold text-white mb-3 flex items-center space-x-2">
-                  <Clock className="h-5 w-5 text-accent-400" />
-                  <span>Timestamp</span>
-                </label>
-                <div className="hash-display text-accent-300 text-xl">
-                  {formatTimestamp(proof.timestamp)}
-                </div>
-              </div>
-            </div>
-
-            {proof.fileName && (
-              <div className="gradient-border">
-                <div className="gradient-border-content p-6">
-                  <label className="block text-lg font-semibold text-white mb-3">
-                    File Details
-                  </label>
-                  <div className="bg-white/5 p-4 rounded-xl border border-white/10">
-                    <div className="grid md:grid-cols-3 gap-4 text-gray-300">
-                      <div>
-                        <span className="text-gray-400">Name:</span>
-                        <p className="font-semibold text-white">{proof.fileName}</p>
-                      </div>
-                      <div>
-                        <span className="text-gray-400">Type:</span>
-                        <p className="font-semibold text-white">{proof.fileType}</p>
-                      </div>
-                      <div>
-                        <span className="text-gray-400">Size:</span>
-                        <p className="font-semibold text-white">{(proof.fileSize / 1024).toFixed(2)} KB</p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-
-          <div className="mt-12 pt-8 border-t border-white/20">
-            <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-xl p-6 mb-8">
-              <div className="flex items-start space-x-3">
-                <AlertCircle className="h-6 w-6 text-yellow-400 flex-shrink-0 mt-0.5" />
-                <div>
-                  <p className="text-yellow-200 font-semibold mb-2">Important:</p>
-                  <p className="text-yellow-100">
-                    Save this information! You'll need the original content and this proof data to verify the existence later.
-                  </p>
-                </div>
-              </div>
+              <h3 className="text-slate-200 font-medium mb-1">Blockchain Anchored</h3>
+              <p className="text-sm text-slate-500">Secured permanently on the Ethereum network.</p>
             </div>
             
-            <div className="flex flex-col sm:flex-row gap-4">
-              <button
-                onClick={() => {
-                  setProof(null);
-                  setTextContent('');
-                  setSelectedFile(null);
-                }}
-                className="btn btn-glass flex-1 text-lg py-3"
-              >
-                Create Another Proof
-              </button>
-              <button
-                onClick={() => window.location.href = '/verify'}
-                className="btn btn-primary flex-1 text-lg py-3"
-              >
-                Verify a Proof
-              </button>
+            <div className="p-4 rounded-xl hover:bg-white/[0.02] transition-colors group">
+              <div className="w-12 h-12 mx-auto bg-slate-900 rounded-full flex items-center justify-center border border-white/5 mb-4 shadow-lg group-hover:scale-110 transition-transform">
+                <span className="material-symbols-outlined text-blue-400">verified</span>
+              </div>
+              <h3 className="text-slate-200 font-medium mb-1">Verifiable</h3>
+              <p className="text-sm text-slate-500">Anyone can independently verify the authenticity.</p>
             </div>
           </div>
-        </div>
-      )}
         </>
       )}
     </div>

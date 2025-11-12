@@ -10,12 +10,33 @@
   }
   
   body {
-    @apply bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 text-white min-h-screen;
-    background-attachment: fixed;
+    @apply bg-slate-950 text-slate-200 min-h-screen;
   }
 
   * {
     @apply border-white/20;
+  }
+}
+
+@layer utilities {
+  .glass-panel {
+    @apply bg-slate-900/40 backdrop-blur-xl border border-white/10 shadow-2xl;
+  }
+  
+  .text-glow {
+    text-shadow: 0 0 20px rgba(139, 92, 246, 0.5);
+  }
+  
+  .btn-gradient {
+    @apply bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white shadow-lg shadow-indigo-500/25;
+  }
+  
+  .nav-link {
+    @apply text-slate-400 hover:text-white transition-colors duration-200 text-sm font-medium;
+  }
+  
+  .nav-link.active {
+    @apply text-white;
   }
 }
 
