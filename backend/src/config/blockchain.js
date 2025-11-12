@@ -10,8 +10,8 @@ const CONTRACT_ABI = [
   "function proofTimestamp(bytes32) external view returns (uint256)"
 ];
 
-// Contract address (will be set after deployment)
-const CONTRACT_ADDRESS = process.env.CONTRACT_ADDRESS || "0x0000000000000000000000000000000000000000";
+// Contract address (deployed on Sepolia)
+const CONTRACT_ADDRESS = process.env.CONTRACT_ADDRESS || "0xD384D316820d805e062031eF47C1f44F86ADF8cB";
 
 class BlockchainService {
   constructor() {
