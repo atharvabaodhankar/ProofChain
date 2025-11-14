@@ -16,9 +16,11 @@ const Navbar = () => {
           <div className="flex items-center">
             <Link to="/" className="flex items-center space-x-3 group">
               <div className="relative">
-                <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center shadow-lg shadow-indigo-500/20">
-                  <span className="material-symbols-outlined text-white text-[20px]">verified_user</span>
-                </div>
+                <img 
+                  src="/ProofChain.png" 
+                  alt="ProofChain Logo" 
+                  className="w-9 h-9 rounded-lg shadow-lg shadow-indigo-500/20 group-hover:shadow-indigo-500/40 transition-all duration-300"
+                />
               </div>
               <span className="text-lg font-bold tracking-tight text-white">ProofChain</span>
             </Link>
