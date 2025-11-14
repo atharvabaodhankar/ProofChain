@@ -9,11 +9,37 @@ const VerifyProof = () => {
   const [hashInput, setHashInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [verification, setVerification] = useState(null);
+  const [dragActive, setDragActive] = useState(false);
 
   const handleFileSelect = (event) => {
     const file = event.target.files[0];
     if (file) {
       if (file.size > 10 * 1024 * 1024) { // 10MB limit
+        toast.error('File size must be less than 10MB');
+        return;
+      }
+      setSelectedFile(file);
+    }
+  };
+
+  const handleDrag = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.type === "dragenter" || e.type === "dragover") {
+      setDragActive(true);
+    } else if (e.type === "dragleave") {
+      setDragActive(false);
+    }
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragActive(false);
+    
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      const file = e.dataTransfer.files[0];
+      if (file.size > 10 * 1024 * 1024) {
         toast.error('File size must be less than 10MB');
         return;
       }
@@ -38,7 +64,6 @@ const VerifyProof = () => {
       });
 
       const data = await response.json();
-
       if (data.success) {
         setVerification(data);
         if (data.verified) {
@@ -111,14 +136,12 @@ const VerifyProof = () => {
 
       if (data.success) {
         setVerification({
-          success: true,
           verified: data.exists,
           proof: data.proof,
-          hash: data.hash
+          hash: hashInput
         });
-        
         if (data.exists) {
-          toast.success('Proof found!');
+          toast.success('Proof verified successfully!');
         } else {
           toast.error('No proof found for this hash');
         }
@@ -133,330 +156,353 @@ const VerifyProof = () => {
     }
   };
 
-  const formatTimestamp = (timestamp) => {
-    return new Date(timestamp * 1000).toLocaleString();
-  };
-
   const copyToClipboard = (text) => {
     navigator.clipboard.writeText(text);
     toast.success('Copied to clipboard!');
   };
 
+  const formatFileSize = (bytes) => {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  };
   return (
-    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-      <div className="text-center mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-4">
-          Verify Proof of Existence
+    <div className="relative z-10 pt-32 pb-20 px-6 max-w-7xl mx-auto flex flex-col items-center">
+      {/* Header */}
+      <div className="text-center max-w-3xl mb-12 space-y-4">
+        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-green-500/10 border border-green-500/20 text-green-300 text-xs font-medium tracking-wide">
+          <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse"></span>
+          Verification Service
+        </div>
+        
+        <h1 className="text-5xl md:text-6xl font-bold tracking-tight text-white">
+          Verify Proof of <span className="text-transparent bg-clip-text bg-gradient-to-r from-green-400 via-emerald-400 to-green-400">Existence</span>
         </h1>
-        <p className="text-lg text-gray-600">
-          Check if your data has been previously timestamped on the blockchain
+        
+        <p className="text-lg text-slate-400 max-w-2xl mx-auto font-light leading-relaxed">
+          Check if your data has been previously timestamped on the blockchain. Verification is free and available to everyone.
         </p>
       </div>
 
       {!verification ? (
-        <div className="card max-w-2xl mx-auto">
-          {/* Tab Navigation */}
-          <div className="flex border-b border-gray-200 mb-6">
-            <button
-              onClick={() => setActiveTab('text')}
-              className={`flex items-center space-x-2 px-4 py-2 font-medium text-sm border-b-2 transition-colors ${
-                activeTab === 'text'
-                  ? 'border-primary-600 text-primary-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700'
-              }`}
-            >
-              <FileText className="h-4 w-4" />
-              <span>Text</span>
-            </button>
-            <button
-              onClick={() => setActiveTab('file')}
-              className={`flex items-center space-x-2 px-4 py-2 font-medium text-sm border-b-2 transition-colors ${
-                activeTab === 'file'
-                  ? 'border-primary-600 text-primary-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700'
-              }`}
-            >
-              <Upload className="h-4 w-4" />
-              <span>File</span>
-            </button>
-            <button
-              onClick={() => setActiveTab('hash')}
-              className={`flex items-center space-x-2 px-4 py-2 font-medium text-sm border-b-2 transition-colors ${
-                activeTab === 'hash'
-                  ? 'border-primary-600 text-primary-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700'
-              }`}
-            >
-              <Search className="h-4 w-4" />
-              <span>Hash</span>
-            </button>
-          </div>
-
-          {/* Text Tab */}
-          {activeTab === 'text' && (
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Enter the original text content
-              </label>
-              <textarea
-                value={textContent}
-                onChange={(e) => setTextContent(e.target.value)}
-                placeholder="Enter the exact text you want to verify..."
-                className="input h-32 resize-none"
-                disabled={loading}
-              />
-              <p className="text-sm text-gray-500 mt-2">
-                The text must match exactly what was originally submitted
-              </p>
-              <button
-                onClick={verifyTextProof}
-                disabled={loading || !textContent.trim()}
-                className="btn btn-primary w-full mt-4 flex items-center justify-center space-x-2"
-              >
-                {loading ? (
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                ) : (
-                  <>
-                    <Search className="h-4 w-4" />
-                    <span>Verify Proof</span>
-                  </>
-                )}
-              </button>
-            </div>
-          )}
-
-          {/* File Tab */}
-          {activeTab === 'file' && (
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Select the original file
-              </label>
-              <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
-                <Upload className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                <input
-                  type="file"
-                  onChange={handleFileSelect}
-                  className="hidden"
-                  id="file-upload"
-                  disabled={loading}
-                />
-                <label
-                  htmlFor="file-upload"
-                  className="cursor-pointer text-primary-600 hover:text-primary-700 font-medium"
+        /* Main Form */
+        <div className="w-full max-w-4xl relative group">
+          <div className="absolute -inset-1 bg-gradient-to-r from-green-500 via-emerald-500 to-teal-500 rounded-3xl blur-xl opacity-20 group-hover:opacity-30 transition duration-1000"></div>
+          <div className="relative bg-slate-900/40 backdrop-blur-xl border border-white/10 shadow-2xl rounded-2xl overflow-hidden flex flex-col">
+            
+            {/* Tab Navigation */}
+            <div className="border-b border-white/5 bg-slate-900/30">
+              <div className="flex">
+                <button
+                  onClick={() => setActiveTab('text')}
+                  className={`flex-1 py-5 text-sm font-medium border-b-2 transition-colors flex items-center justify-center gap-2 ${
+                    activeTab === 'text'
+                      ? 'text-white border-green-500 bg-white/[0.02]'
+                      : 'text-slate-500 hover:text-slate-300 border-transparent hover:bg-white/[0.01]'
+                  }`}
                 >
-                  Choose a file
-                </label>
-                <p className="text-sm text-gray-500 mt-2">
-                  The file must be identical to the original
-                </p>
+                  <span className="material-symbols-outlined text-green-400">description</span>
+                  Verify Text
+                </button>
+                <button
+                  onClick={() => setActiveTab('file')}
+                  className={`flex-1 py-5 text-sm font-medium border-b-2 transition-colors flex items-center justify-center gap-2 ${
+                    activeTab === 'file'
+                      ? 'text-white border-green-500 bg-white/[0.02]'
+                      : 'text-slate-500 hover:text-slate-300 border-transparent hover:bg-white/[0.01]'
+                  }`}
+                >
+                  <span className="material-symbols-outlined">folder_open</span>
+                  Verify File
+                </button>
+                <button
+                  onClick={() => setActiveTab('hash')}
+                  className={`flex-1 py-5 text-sm font-medium border-b-2 transition-colors flex items-center justify-center gap-2 ${
+                    activeTab === 'hash'
+                      ? 'text-white border-green-500 bg-white/[0.02]'
+                      : 'text-slate-500 hover:text-slate-300 border-transparent hover:bg-white/[0.01]'
+                  }`}
+                >
+                  <span className="material-symbols-outlined">tag</span>
+                  Verify Hash
+                </button>
               </div>
-              
-              {selectedFile && (
-                <div className="mt-4 p-3 bg-gray-50 rounded border">
-                  <p className="text-sm font-medium text-gray-900">
-                    Selected: {selectedFile.name}
-                  </p>
-                  <p className="text-sm text-gray-500">
-                    Size: {(selectedFile.size / 1024 / 1024).toFixed(2)} MB
-                  </p>
+            </div>
+
+            {/* Content */}
+            <div className="p-8 md:p-10 space-y-8">
+              {activeTab === 'text' ? (
+                /* Text Tab */
+                <div className="space-y-4">
+                  <div className="flex justify-between items-end">
+                    <label className="text-sm font-medium text-slate-300" htmlFor="verify-text">
+                      Text Content to Verify
+                    </label>
+                    <span className="text-xs text-slate-500 font-mono">Enter original content</span>
+                  </div>
+                  
+                  <div className="relative">
+                    <textarea
+                      className="w-full bg-slate-950/50 border border-white/10 rounded-xl p-6 text-slate-200 placeholder-slate-600 focus:ring-2 focus:ring-green-500/50 focus:border-green-500/50 transition-all min-h-[300px] resize-none font-mono text-sm leading-relaxed shadow-inner"
+                      id="verify-text"
+                      placeholder="Paste the original text content you want to verify..."
+                      value={textContent}
+                      onChange={(e) => setTextContent(e.target.value)}
+                    />
+                    <div className="absolute bottom-4 right-4 flex items-center gap-3">
+                      <span className="text-xs text-slate-500 font-mono">{textContent.length} characters</span>
+                    </div>
+                  </div>
+                </div>
+              ) : activeTab === 'file' ? (
+                /* File Tab */
+                <div className="space-y-4">
+                  <div className="flex justify-between items-end">
+                    <label className="text-sm font-medium text-slate-300">
+                      File to Verify
+                    </label>
+                    <span className="text-xs text-slate-500 font-mono">Max 10MB</span>
+                  </div>
+                  
+                  <div
+                    className={`relative border-2 border-dashed rounded-xl p-8 text-center transition-all ${
+                      dragActive
+                        ? 'border-green-500 bg-green-500/5'
+                        : 'border-white/20 hover:border-white/30'
+                    }`}
+                    onDragEnter={handleDrag}
+                    onDragLeave={handleDrag}
+                    onDragOver={handleDrag}
+                    onDrop={handleDrop}
+                  >
+                    <input
+                      type="file"
+                      onChange={handleFileSelect}
+                      className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                      accept="*/*"
+                    />
+                    
+                    {selectedFile ? (
+                      <div className="space-y-3">
+                        <span className="material-symbols-outlined text-4xl text-green-400">description</span>
+                        <div>
+                          <p className="text-slate-200 font-medium">{selectedFile.name}</p>
+                          <p className="text-slate-500 text-sm">{formatFileSize(selectedFile.size)}</p>
+                        </div>
+                        <button
+                          onClick={() => setSelectedFile(null)}
+                          className="text-xs text-slate-500 hover:text-slate-300 underline"
+                        >
+                          Remove file
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="space-y-3">
+                        <span className="material-symbols-outlined text-4xl text-slate-500">cloud_upload</span>
+                        <div>
+                          <p className="text-slate-300">Drop your file here or click to browse</p>
+                          <p className="text-slate-500 text-sm">Upload the original file to verify its proof</p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ) : (
+                /* Hash Tab */
+                <div className="space-y-4">
+                  <div className="flex justify-between items-end">
+                    <label className="text-sm font-medium text-slate-300" htmlFor="verify-hash">
+                      SHA-256 Hash to Verify
+                    </label>
+                    <span className="text-xs text-slate-500 font-mono">64 characters</span>
+                  </div>
+                  
+                  <div className="relative">
+                    <input
+                      type="text"
+                      className="w-full bg-slate-950/50 border border-white/10 rounded-xl p-6 text-slate-200 placeholder-slate-600 focus:ring-2 focus:ring-green-500/50 focus:border-green-500/50 transition-all font-mono text-sm"
+                      id="verify-hash"
+                      placeholder="Enter the SHA-256 hash (e.g., a1b2c3d4e5f6...)"
+                      value={hashInput}
+                      onChange={(e) => setHashInput(e.target.value)}
+                      maxLength={64}
+                    />
+                    <div className="absolute bottom-4 right-4 flex items-center gap-3">
+                      <span className="text-xs text-slate-500 font-mono">{hashInput.length}/64</span>
+                    </div>
+                  </div>
                 </div>
               )}
 
-              <button
-                onClick={verifyFileProof}
-                disabled={loading || !selectedFile}
-                className="btn btn-primary w-full mt-4 flex items-center justify-center space-x-2"
-              >
-                {loading ? (
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                ) : (
-                  <>
-                    <Search className="h-4 w-4" />
-                    <span>Verify Proof</span>
-                  </>
-                )}
-              </button>
+              {/* Action Bar */}
+              <div className="flex flex-col md:flex-row items-center justify-between gap-6 pt-6 border-t border-white/5">
+                <div className="flex items-center gap-4 w-full md:w-auto">
+                  <div className="flex flex-col">
+                    <span className="text-xs text-slate-500 uppercase tracking-wider font-semibold">Verification</span>
+                    <div className="flex items-baseline gap-1.5">
+                      <span className="text-lg font-bold text-white">Free</span>
+                      <span className="text-xs text-slate-500">Always</span>
+                    </div>
+                  </div>
+                </div>
+                
+                <button
+                  onClick={activeTab === 'text' ? verifyTextProof : activeTab === 'file' ? verifyFileProof : verifyByHash}
+                  disabled={loading || (activeTab === 'text' ? !textContent.trim() : activeTab === 'file' ? !selectedFile : !hashInput.trim())}
+                  className="w-full md:w-auto bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500 text-white shadow-lg shadow-green-500/25 py-4 px-10 rounded-xl font-semibold text-sm tracking-wide transform active:scale-[0.98] transition-all flex items-center justify-center gap-2 group/btn disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {loading ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-2 border-white/30 border-t-white"></div>
+                      Verifying...
+                    </>
+                  ) : (
+                    <>
+                      <span className="material-symbols-outlined group-hover/btn:scale-110 transition-transform">verified</span>
+                      Verify Proof
+                    </>
+                  )}
+                </button>
+              </div>
             </div>
-          )}
-
-          {/* Hash Tab */}
-          {activeTab === 'hash' && (
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Enter SHA-256 hash
-              </label>
-              <input
-                type="text"
-                value={hashInput}
-                onChange={(e) => setHashInput(e.target.value)}
-                placeholder="Enter the 64-character SHA-256 hash..."
-                className="input font-mono"
-                disabled={loading}
-                maxLength={64}
-              />
-              <p className="text-sm text-gray-500 mt-2">
-                Enter the exact hash from your proof certificate
-              </p>
-              <button
-                onClick={verifyByHash}
-                disabled={loading || !hashInput.trim() || hashInput.length !== 64}
-                className="btn btn-primary w-full mt-4 flex items-center justify-center space-x-2"
-              >
-                {loading ? (
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                ) : (
-                  <>
-                    <Search className="h-4 w-4" />
-                    <span>Verify Hash</span>
-                  </>
-                )}
-              </button>
-            </div>
-          )}
+          </div>
         </div>
       ) : (
         /* Verification Result */
-        <div className="card max-w-3xl mx-auto">
-          <div className="text-center mb-6">
-            <div className={`rounded-full p-3 w-16 h-16 mx-auto mb-4 flex items-center justify-center ${
-              verification.verified 
-                ? 'bg-green-100' 
-                : 'bg-red-100'
-            }`}>
-              {verification.verified ? (
-                <CheckCircle className="h-8 w-8 text-green-600" />
-              ) : (
-                <XCircle className="h-8 w-8 text-red-600" />
-              )}
-            </div>
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">
-              {verification.verified ? 'Proof Verified!' : 'No Proof Found'}
-            </h2>
-            <p className="text-gray-600">
-              {verification.verified 
-                ? 'This content was previously timestamped on the blockchain'
-                : 'No proof exists for this content on the blockchain'
-              }
-            </p>
-          </div>
-
-          {verification.verified && verification.proof && (
-            <div className="space-y-4">
+        <div className="w-full max-w-4xl relative group">
+          <div className={`absolute -inset-1 rounded-3xl blur-xl opacity-20 group-hover:opacity-30 transition duration-1000 ${
+            verification.verified 
+              ? 'bg-gradient-to-r from-green-500 via-emerald-500 to-teal-500'
+              : 'bg-gradient-to-r from-red-500 via-orange-500 to-yellow-500'
+          }`}></div>
+          <div className="relative bg-slate-900/40 backdrop-blur-xl border border-white/10 shadow-2xl rounded-2xl p-8 md:p-10">
+            <div className="text-center space-y-6">
+              <div className={`w-16 h-16 mx-auto rounded-full flex items-center justify-center ${
+                verification.verified ? 'bg-green-500/20' : 'bg-red-500/20'
+              }`}>
+                {verification.verified ? (
+                  <CheckCircle className="h-8 w-8 text-green-400" />
+                ) : (
+                  <XCircle className="h-8 w-8 text-red-400" />
+                )}
+              </div>
+              
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Content Hash (SHA-256)
-                </label>
-                <div className="hash-display flex items-center justify-between">
-                  <span className="flex-1">{verification.proof.hash}</span>
-                  <button
-                    onClick={() => copyToClipboard(verification.proof.hash)}
-                    className="ml-2 text-primary-600 hover:text-primary-700"
-                  >
-                    Copy
-                  </button>
-                </div>
+                <h2 className={`text-3xl font-bold mb-2 ${
+                  verification.verified ? 'text-green-400' : 'text-red-400'
+                }`}>
+                  {verification.verified ? 'Proof Verified!' : 'No Proof Found'}
+                </h2>
+                <p className="text-slate-400">
+                  {verification.verified 
+                    ? 'This data has been timestamped on the blockchain'
+                    : 'No proof of existence found for this data'
+                  }
+                </p>
               </div>
 
-              <div className="grid md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Transaction Hash
-                  </label>
-                  <div className="hash-display flex items-center justify-between">
-                    <span className="flex-1 truncate">{verification.proof.transactionHash}</span>
-                    <a
-                      href={`https://sepolia.etherscan.io/tx/${verification.proof.transactionHash}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="ml-2 text-primary-600 hover:text-primary-700"
-                    >
-                      <ExternalLink className="h-4 w-4" />
-                    </a>
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Block Number
-                  </label>
-                  <div className="hash-display">
-                    {verification.proof.blockNumber}
-                  </div>
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center space-x-2">
-                  <Clock className="h-4 w-4" />
-                  <span>Timestamp</span>
-                </label>
-                <div className="hash-display">
-                  {formatTimestamp(verification.proof.timestamp)}
-                </div>
-              </div>
-
-              {verification.proof.creator && (
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Created By
-                  </label>
-                  <div className="hash-display">
-                    {verification.proof.creator}
+              {verification.verified && verification.proof && (
+                <div className="bg-slate-950/50 rounded-xl p-6 space-y-4 text-left">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-xs text-slate-500 uppercase tracking-wider font-semibold">Hash</label>
+                      <div className="flex items-center gap-2 mt-1">
+                        <code className="text-sm font-mono text-slate-200 break-all">{verification.proof.hash || verification.hash}</code>
+                        <button
+                          onClick={() => copyToClipboard(verification.proof.hash || verification.hash)}
+                          className="p-1 rounded hover:bg-white/10 text-slate-500 hover:text-slate-300 transition-colors"
+                        >
+                          <span className="material-symbols-outlined text-[16px]">content_copy</span>
+                        </button>
+                      </div>
+                    </div>
+                    
+                    {verification.proof.transactionHash && (
+                      <div>
+                        <label className="text-xs text-slate-500 uppercase tracking-wider font-semibold">Transaction</label>
+                        <div className="flex items-center gap-2 mt-1">
+                          <code className="text-sm font-mono text-slate-200 break-all">{verification.proof.transactionHash}</code>
+                          <button
+                            onClick={() => copyToClipboard(verification.proof.transactionHash)}
+                            className="p-1 rounded hover:bg-white/10 text-slate-500 hover:text-slate-300 transition-colors"
+                          >
+                            <span className="material-symbols-outlined text-[16px]">content_copy</span>
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                    
+                    {verification.proof.blockNumber && (
+                      <div>
+                        <label className="text-xs text-slate-500 uppercase tracking-wider font-semibold">Block Number</label>
+                        <p className="text-sm font-mono text-slate-200 mt-1">{verification.proof.blockNumber}</p>
+                      </div>
+                    )}
+                    
+                    {verification.proof.timestamp && (
+                      <div>
+                        <label className="text-xs text-slate-500 uppercase tracking-wider font-semibold">Timestamp</label>
+                        <p className="text-sm font-mono text-slate-200 mt-1">
+                          {new Date(verification.proof.timestamp * 1000).toLocaleString()}
+                        </p>
+                      </div>
+                    )}
                   </div>
                 </div>
               )}
 
-              {verification.proof.fileName && (
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    File Details
-                  </label>
-                  <div className="bg-gray-50 p-3 rounded border">
-                    <p><strong>Name:</strong> {verification.proof.fileName}</p>
-                    <p><strong>Type:</strong> {verification.proof.fileType}</p>
-                    <p><strong>Size:</strong> {(verification.proof.fileSize / 1024).toFixed(2)} KB</p>
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
-
-          {!verification.verified && (
-            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-              <p className="text-sm text-yellow-800">
-                <strong>Hash:</strong> {verification.hash || 'N/A'}
-              </p>
-              <p className="text-sm text-yellow-700 mt-2">
-                This content has not been previously timestamped. You can create a proof for it now.
-              </p>
-            </div>
-          )}
-
-          <div className="mt-6 pt-6 border-t border-gray-200">
-            <div className="flex space-x-4">
-              <button
-                onClick={() => {
-                  setVerification(null);
-                  setTextContent('');
-                  setSelectedFile(null);
-                  setHashInput('');
-                }}
-                className="btn btn-outline flex-1"
-              >
-                Verify Another
-              </button>
-              {!verification.verified && (
+              <div className="flex flex-col md:flex-row gap-4">
+                <button
+                  onClick={() => {
+                    setVerification(null);
+                    setTextContent('');
+                    setSelectedFile(null);
+                    setHashInput('');
+                  }}
+                  className="flex-1 bg-white/5 hover:bg-white/10 text-white border border-white/10 py-3 px-6 rounded-xl font-medium transition-all"
+                >
+                  Verify Another
+                </button>
                 <button
                   onClick={() => window.location.href = '/create'}
-                  className="btn btn-primary flex-1"
+                  className="flex-1 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white shadow-lg shadow-indigo-500/25 py-3 px-6 rounded-xl font-medium transition-all"
                 >
-                  Create Proof
+                  Create a Proof
                 </button>
-              )}
+              </div>
             </div>
           </div>
         </div>
       )}
+
+      {/* Info Section */}
+      <div className="mt-16 grid grid-cols-1 md:grid-cols-3 gap-8 text-center max-w-4xl w-full">
+        <div className="p-4 rounded-xl hover:bg-white/[0.02] transition-colors group">
+          <div className="w-12 h-12 mx-auto bg-slate-900 rounded-full flex items-center justify-center border border-white/5 mb-4 shadow-lg group-hover:scale-110 transition-transform">
+            <span className="material-symbols-outlined text-green-400">verified</span>
+          </div>
+          <h3 className="text-slate-200 font-medium mb-1">Instant Verification</h3>
+          <p className="text-sm text-slate-500">Get results immediately from the blockchain.</p>
+        </div>
+        
+        <div className="p-4 rounded-xl hover:bg-white/[0.02] transition-colors group">
+          <div className="w-12 h-12 mx-auto bg-slate-900 rounded-full flex items-center justify-center border border-white/5 mb-4 shadow-lg group-hover:scale-110 transition-transform">
+            <span className="material-symbols-outlined text-blue-400">public</span>
+          </div>
+          <h3 className="text-slate-200 font-medium mb-1">Public Verification</h3>
+          <p className="text-sm text-slate-500">Anyone can verify proofs without an account.</p>
+        </div>
+        
+        <div className="p-4 rounded-xl hover:bg-white/[0.02] transition-colors group">
+          <div className="w-12 h-12 mx-auto bg-slate-900 rounded-full flex items-center justify-center border border-white/5 mb-4 shadow-lg group-hover:scale-110 transition-transform">
+            <span className="material-symbols-outlined text-violet-400">security</span>
+          </div>
+          <h3 className="text-slate-200 font-medium mb-1">Cryptographically Secure</h3>
+          <p className="text-sm text-slate-500">Backed by blockchain immutability.</p>
+        </div>
+      </div>
     </div>
   );
 };
