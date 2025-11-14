@@ -10,45 +10,38 @@ const Navbar = () => {
   const isActive = (path) => location.pathname === path;
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 bg-black/20 backdrop-blur-xl border-b border-white/10">
+    <nav className="fixed top-0 left-0 right-0 z-50 bg-slate-950/70 backdrop-blur-xl border-b border-white/10">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-20">
           <div className="flex items-center">
             <Link to="/" className="flex items-center space-x-3 group">
               <div className="relative">
-                <Shield className="h-10 w-10 text-primary-400 group-hover:text-primary-300 transition-colors duration-300" />
-                <div className="absolute inset-0 h-10 w-10 bg-primary-400/20 rounded-full blur-xl group-hover:bg-primary-300/30 transition-all duration-300"></div>
+                <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center shadow-lg shadow-indigo-500/20">
+                  <span className="material-symbols-outlined text-white text-[20px]">verified_user</span>
+                </div>
               </div>
-              <div className="flex flex-col">
-                <span className="text-2xl font-bold gradient-text">
-                  ProofChain
-                </span>
-                <span className="text-xs text-gray-400 -mt-1">Proof of Existence</span>
-              </div>
+              <span className="text-lg font-bold tracking-tight text-white">ProofChain</span>
             </Link>
           </div>
 
           <div className="flex items-center space-x-8">
-            <div className="hidden md:flex items-center space-x-2">
+            <div className="hidden md:flex items-center space-x-8">
               {[
-                { path: '/', label: 'Home' },
-                { path: '/create', label: 'Create' },
+                { path: '/', label: 'Dashboard' },
+                { path: '/create', label: 'Create Proof' },
                 { path: '/verify', label: 'Verify' },
-                ...(user ? [{ path: '/dashboard', label: 'Dashboard' }] : [])
+                { path: '/dashboard', label: 'History' }
               ].map(({ path, label }) => (
                 <Link
                   key={path}
                   to={path}
-                  className={`relative px-4 py-2 rounded-xl font-medium transition-all duration-300 group ${
+                  className={`nav-link relative ${
                     isActive(path) 
-                      ? 'text-primary-300 bg-primary-500/20' 
-                      : 'text-gray-300 hover:text-white hover:bg-white/10'
+                      ? 'active after:absolute after:bottom-[-28px] after:left-0 after:w-full after:h-[2px] after:bg-indigo-500 after:content-[\'\'] after:shadow-[0_-4px_12px_rgba(99,102,241,0.6)]' 
+                      : ''
                   }`}
                 >
                   {label}
-                  {isActive(path) && (
-                    <div className="absolute inset-0 bg-gradient-to-r from-primary-500/20 to-secondary-500/20 rounded-xl blur-sm"></div>
-                  )}
                 </Link>
               ))}
             </div>
@@ -56,18 +49,15 @@ const Navbar = () => {
             <div className="flex items-center space-x-4">
               {user ? (
                 <div className="flex items-center space-x-4">
-                  <div className="flex items-center space-x-3 px-4 py-2 bg-white/10 backdrop-blur-md rounded-xl border border-white/20">
+                  <div className="flex items-center space-x-3 px-4 py-2 bg-white/5 hover:bg-white/10 rounded-lg border border-white/5 transition-all">
                     {user.photoURL ? (
-                      <div className="relative">
-                        <img
-                          src={user.photoURL}
-                          alt={user.displayName}
-                          className="h-8 w-8 rounded-full ring-2 ring-primary-400/50"
-                        />
-                        <div className="absolute inset-0 h-8 w-8 bg-primary-400/20 rounded-full blur-md"></div>
-                      </div>
+                      <img
+                        src={user.photoURL}
+                        alt={user.displayName}
+                        className="h-8 w-8 rounded-full ring-2 ring-indigo-400/50"
+                      />
                     ) : (
-                      <div className="h-8 w-8 rounded-full bg-gradient-to-r from-primary-500 to-secondary-500 flex items-center justify-center">
+                      <div className="h-8 w-8 rounded-full bg-gradient-to-r from-indigo-500 to-violet-500 flex items-center justify-center">
                         <User className="h-4 w-4 text-white" />
                       </div>
                     )}
@@ -77,20 +67,24 @@ const Navbar = () => {
                   </div>
                   <button
                     onClick={logout}
-                    className="flex items-center space-x-2 px-4 py-2 text-sm font-medium text-gray-300 hover:text-red-400 transition-colors duration-300 hover:bg-red-500/10 rounded-xl"
+                    className="flex items-center space-x-2 px-4 py-2 text-sm font-medium text-slate-400 hover:text-white transition-colors duration-300 hover:bg-white/5 rounded-lg"
                   >
                     <LogOut className="h-4 w-4" />
                     <span className="hidden sm:block">Sign Out</span>
                   </button>
                 </div>
               ) : (
-                <button
-                  onClick={login}
-                  className="btn btn-primary flex items-center space-x-2 group"
-                >
-                  <Sparkles className="h-4 w-4 group-hover:animate-pulse" />
-                  <span>Sign In</span>
-                </button>
+                <div className="flex items-center gap-4">
+                  <button
+                    onClick={login}
+                    className="text-sm font-medium text-slate-400 hover:text-white transition-colors"
+                  >
+                    Sign In
+                  </button>
+                  <button className="bg-white/5 hover:bg-white/10 text-white text-sm font-medium px-4 py-2 rounded-lg border border-white/5 transition-all">
+                    Connect Wallet
+                  </button>
+                </div>
               )}
             </div>
           </div>
