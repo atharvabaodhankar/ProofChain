@@ -4,10 +4,31 @@ export default {
     "./index.html",
     "./src/**/*.{js,ts,jsx,tsx}",
   ],
+  darkMode: 'class',
   theme: {
     extend: {
+      fontFamily: {
+        sans: ['Inter', 'sans-serif'],
+      },
       colors: {
         border: 'rgba(255, 255, 255, 0.2)',
+        indigo: {
+          400: '#818cf8',
+          500: '#6366f1',
+          600: '#4f46e5',
+          900: '#312e81',
+          950: '#1e1b4b',
+        },
+        violet: {
+          500: '#8b5cf6',
+          900: '#4c1d95',
+          950: '#2e1065',
+        },
+        slate: {
+          800: '#1e293b',
+          900: '#0f172a',
+          950: '#020617',
+        },
         primary: {
           50: '#f0f9ff',
           100: '#e0f2fe',
