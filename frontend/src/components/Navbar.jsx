@@ -1,7 +1,8 @@
 import React from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 import { Shield, User, LogOut, Sparkles } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import AnimatedLink from './AnimatedLink';
 
 const Navbar = () => {
   const { user, login, logout } = useAuth();
@@ -14,7 +15,7 @@ const Navbar = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-20">
           <div className="flex items-center">
-            <Link to="/" className="flex items-center space-x-3 group">
+            <AnimatedLink to="/" className="flex items-center space-x-3 group">
               <div className="relative">
                 <img 
                   src="/ProofChain.png" 
@@ -23,18 +24,19 @@ const Navbar = () => {
                 />
               </div>
               <span className="text-lg font-bold tracking-tight text-white">ProofChain</span>
-            </Link>
+            </AnimatedLink>
           </div>
 
           <div className="flex items-center space-x-8">
             <div className="hidden md:flex items-center space-x-8">
               {[
-                { path: '/', label: 'Dashboard' },
+                { path: '/', label: 'Home' },
                 { path: '/create', label: 'Create Proof' },
                 { path: '/verify', label: 'Verify' },
-                { path: '/dashboard', label: 'History' }
+                { path: '/dashboard', label: 'Dashboard' },
+                { path: '/history', label: 'History' }
               ].map(({ path, label }) => (
-                <Link
+                <AnimatedLink
                   key={path}
                   to={path}
                   className={`nav-link relative ${
@@ -44,7 +46,7 @@ const Navbar = () => {
                   }`}
                 >
                   {label}
-                </Link>
+                </AnimatedLink>
               ))}
             </div>
 

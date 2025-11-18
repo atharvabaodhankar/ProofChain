@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
 import { Shield, FileText, CheckCircle, Clock, Lock, Zap, Sparkles, ArrowRight, Star, Globe, Users } from 'lucide-react';
+import AnimatedLink from '../components/AnimatedLink';
 
 const Home = () => {
   const [isVisible, setIsVisible] = useState(false);
@@ -67,22 +67,22 @@ const Home = () => {
         </p>
 
         <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-          <Link
+          <AnimatedLink
             to="/create"
             className="bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white shadow-lg shadow-indigo-500/25 py-4 px-8 rounded-xl font-semibold text-lg tracking-wide transform active:scale-[0.98] transition-all flex items-center gap-2 group"
           >
             <span className="material-symbols-outlined group-hover:rotate-12 transition-transform">fingerprint</span>
             Create Proof
             <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
-          </Link>
+          </AnimatedLink>
           
-          <Link
+          <AnimatedLink
             to="/verify"
             className="bg-white/5 hover:bg-white/10 text-white border border-white/10 py-4 px-8 rounded-xl font-semibold text-lg transition-all flex items-center gap-2"
           >
             <CheckCircle className="h-5 w-5" />
             Verify Proof
-          </Link>
+          </AnimatedLink>
         </div>
       </div>
 
@@ -133,13 +133,13 @@ const Home = () => {
             <p className="text-slate-400 mb-6">
               Join thousands of users who trust ProofChain to secure their digital assets.
             </p>
-            <Link
+            <AnimatedLink
               to="/create"
               className="bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white shadow-lg shadow-indigo-500/25 py-3 px-8 rounded-xl font-semibold transition-all inline-flex items-center gap-2"
             >
               <Sparkles className="h-5 w-5" />
               Create Your First Proof
-            </Link>
+            </AnimatedLink>
           </div>
         </div>
       </div>
