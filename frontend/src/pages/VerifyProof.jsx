@@ -480,24 +480,33 @@ const VerifyProof = () => {
       {/* Info Section */}
       <div className="mt-16 grid grid-cols-1 md:grid-cols-3 gap-8 text-center max-w-4xl w-full">
         <div className="p-4 rounded-xl hover:bg-white/[0.02] transition-colors group">
-          <div className="w-12 h-12 mx-auto bg-slate-900 rounded-full flex items-center justify-center border border-white/5 mb-4 shadow-lg group-hover:scale-110 transition-transform">
-            <span className="material-symbols-outlined text-green-400">verified</span>
+          <div className="relative w-12 h-12 mx-auto mb-4 group-hover:scale-110 transition-transform">
+            <div className="absolute inset-0 bg-gradient-to-r from-green-500 to-emerald-500 opacity-20 rounded-full blur-sm"></div>
+            <div className="relative w-12 h-12 bg-white/10 backdrop-blur-md border border-white/20 rounded-full flex items-center justify-center shadow-lg">
+              <span className="material-symbols-outlined text-green-400">verified</span>
+            </div>
           </div>
           <h3 className="text-slate-200 font-medium mb-1">Instant Verification</h3>
           <p className="text-sm text-slate-500">Get results immediately from the blockchain.</p>
         </div>
         
         <div className="p-4 rounded-xl hover:bg-white/[0.02] transition-colors group">
-          <div className="w-12 h-12 mx-auto bg-slate-900 rounded-full flex items-center justify-center border border-white/5 mb-4 shadow-lg group-hover:scale-110 transition-transform">
-            <span className="material-symbols-outlined text-blue-400">public</span>
+          <div className="relative w-12 h-12 mx-auto mb-4 group-hover:scale-110 transition-transform">
+            <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-cyan-500 opacity-20 rounded-full blur-sm"></div>
+            <div className="relative w-12 h-12 bg-white/10 backdrop-blur-md border border-white/20 rounded-full flex items-center justify-center shadow-lg">
+              <span className="material-symbols-outlined text-blue-400">public</span>
+            </div>
           </div>
           <h3 className="text-slate-200 font-medium mb-1">Public Verification</h3>
           <p className="text-sm text-slate-500">Anyone can verify proofs without an account.</p>
         </div>
         
         <div className="p-4 rounded-xl hover:bg-white/[0.02] transition-colors group">
-          <div className="w-12 h-12 mx-auto bg-slate-900 rounded-full flex items-center justify-center border border-white/5 mb-4 shadow-lg group-hover:scale-110 transition-transform">
-            <span className="material-symbols-outlined text-violet-400">security</span>
+          <div className="relative w-12 h-12 mx-auto mb-4 group-hover:scale-110 transition-transform">
+            <div className="absolute inset-0 bg-gradient-to-r from-violet-500 to-purple-500 opacity-20 rounded-full blur-sm"></div>
+            <div className="relative w-12 h-12 bg-white/10 backdrop-blur-md border border-white/20 rounded-full flex items-center justify-center shadow-lg">
+              <span className="material-symbols-outlined text-violet-400">security</span>
+            </div>
           </div>
           <h3 className="text-slate-200 font-medium mb-1">Cryptographically Secure</h3>
           <p className="text-sm text-slate-500">Backed by blockchain immutability.</p>
