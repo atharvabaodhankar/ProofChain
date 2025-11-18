@@ -18,9 +18,9 @@ const PageTransition = ({ children }) => {
   useEffect(() => {
     const currentIndex = pageOrder[location.pathname] || 0;
     const previousPath = sessionStorage.getItem('previousPath');
-    const previousIndex = pageOrder[previousPath] || 0;
+    const previousIndex = previousPath ? (pageOrder[previousPath] || 0) : 0;
     
-    // Determine slide direction: 1 for right-to-left, -1 for left-to-right
+    // Determine slide direction: 1 for forward (right-to-left), -1 for backward (left-to-right)
     const slideDirection = currentIndex > previousIndex ? 1 : -1;
     setDirection(slideDirection);
     
@@ -28,31 +28,37 @@ const PageTransition = ({ children }) => {
     sessionStorage.setItem('previousPath', location.pathname);
   }, [location.pathname]);
   
+  // Calculate animation values based on direction
+  const enterX = direction > 0 ? '100%' : '-100%'; // Forward: from RIGHT, Backward: from LEFT
+  const exitX = direction > 0 ? '-100%' : '100%';  // Forward: to LEFT, Backward: to RIGHT
+  
   const variants = {
-    enter: (direction) => ({
-      x: direction > 0 ? '100%' : '-100%', // New page enters from opposite direction
+    enter: {
+      x: enterX,
       opacity: 0,
-    }),
+      scale: 0.98,
+    },
     center: {
       x: 0,
       opacity: 1,
+      scale: 1,
     },
-    exit: (direction) => ({
-      x: direction > 0 ? '-100%' : '100%', // Current page exits in navigation direction
+    exit: {
+      x: exitX,
       opacity: 0,
-    }),
+      scale: 0.98,
+    },
   };
   
   const transition = {
     type: "tween",
-    ease: [0.25, 0.46, 0.45, 0.94], // Smooth cubic-bezier easing
-    duration: 0.4, // Optimal duration for smooth feel
+    ease: [0.22, 1, 0.36, 1], // More fluid cubic-bezier easing
+    duration: 0.6, // Slower for more elegant feel
   };
   
   return (
     <motion.div
       key={location.pathname}
-      custom={direction}
       variants={variants}
       initial="enter"
       animate="center"
