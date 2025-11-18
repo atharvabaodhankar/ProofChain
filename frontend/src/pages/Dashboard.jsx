@@ -36,7 +36,7 @@ const Dashboard = () => {
     return (
       <div className="relative z-10 pt-32 pb-20 px-6 max-w-4xl mx-auto">
         <div className="text-center">
-          <div className="w-16 h-16 mx-auto bg-slate-900/40 rounded-full flex items-center justify-center border border-white/10 mb-6 shadow-lg">
+          <div className="w-16 h-16 mx-auto bg-white/10 backdrop-blur-md border border-white/20 rounded-full flex items-center justify-center mb-6 shadow-lg">
             <User className="h-8 w-8 text-slate-400" />
           </div>
           <h1 className="text-3xl font-bold text-white mb-4">
@@ -97,8 +97,11 @@ const Dashboard = () => {
                   className="h-12 w-12 rounded-full ring-2 ring-indigo-400/50"
                 />
               ) : (
-                <div className="h-12 w-12 rounded-full bg-gradient-to-r from-indigo-500 to-violet-500 flex items-center justify-center">
-                  <User className="h-6 w-6 text-white" />
+                <div className="relative h-12 w-12">
+                  <div className="absolute inset-0 bg-gradient-to-r from-indigo-500 to-violet-500 opacity-20 rounded-full blur-sm"></div>
+                  <div className="relative h-12 w-12 bg-white/10 backdrop-blur-md border border-white/20 rounded-full flex items-center justify-center shadow-lg">
+                    <User className="h-6 w-6 text-white" />
+                  </div>
                 </div>
               )}
               <div>
@@ -258,8 +261,11 @@ const Dashboard = () => {
             Recent Activity
           </h3>
           <div className="text-center py-12">
-            <div className="w-16 h-16 mx-auto bg-slate-800/50 rounded-full flex items-center justify-center mb-4">
-              <Clock className="h-8 w-8 text-slate-500" />
+            <div className="relative w-16 h-16 mx-auto mb-4">
+              <div className="absolute inset-0 bg-gradient-to-r from-orange-500 to-red-500 opacity-20 rounded-full blur-sm"></div>
+              <div className="relative w-16 h-16 bg-white/10 backdrop-blur-md border border-white/20 rounded-full flex items-center justify-center shadow-lg">
+                <Clock className="h-8 w-8 text-slate-500" />
+              </div>
             </div>
             <p className="text-slate-300 mb-2 text-lg">No recent activity</p>
             <p className="text-sm text-slate-500">

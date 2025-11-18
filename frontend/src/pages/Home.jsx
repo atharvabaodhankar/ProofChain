@@ -93,8 +93,12 @@ const Home = () => {
             key={index}
             className="group p-6 rounded-2xl bg-slate-900/40 backdrop-blur-xl border border-white/10 shadow-2xl hover:bg-slate-900/60 transition-all duration-300 hover:-translate-y-2"
           >
-            <div className={`w-12 h-12 rounded-xl bg-gradient-to-r ${feature.color} p-3 mb-4 group-hover:scale-110 transition-transform`}>
-              <feature.icon className="h-6 w-6 text-white" />
+            <div className="relative w-12 h-12 rounded-xl mb-4 group-hover:scale-110 transition-transform">
+              {/* Glass morphism background with subtle gradient */}
+              <div className={`absolute inset-0 bg-gradient-to-r ${feature.color} opacity-20 rounded-xl blur-sm`}></div>
+              <div className="relative w-full h-full bg-white/10 backdrop-blur-md border border-white/20 rounded-xl flex items-center justify-center shadow-lg">
+                <feature.icon className="h-6 w-6 text-white" />
+              </div>
             </div>
             <h3 className="text-xl font-bold text-white mb-2">{feature.title}</h3>
             <p className="text-slate-400 leading-relaxed">{feature.description}</p>
