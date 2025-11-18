@@ -361,8 +361,11 @@ const CreateProof = () => {
               <div className="absolute -inset-1 bg-gradient-to-r from-green-500 via-emerald-500 to-teal-500 rounded-3xl blur-xl opacity-20 group-hover:opacity-30 transition duration-1000"></div>
               <div className="relative bg-slate-900/40 backdrop-blur-xl border border-white/10 shadow-2xl rounded-2xl p-8 md:p-10">
                 <div className="text-center space-y-6">
-                  <div className="w-16 h-16 mx-auto bg-green-500/20 rounded-full flex items-center justify-center">
-                    <span className="material-symbols-outlined text-green-400 text-3xl">verified</span>
+                  <div className="relative w-16 h-16 mx-auto">
+                    <div className="absolute inset-0 bg-gradient-to-r from-green-500 to-emerald-500 opacity-20 rounded-full blur-sm"></div>
+                    <div className="relative w-16 h-16 bg-white/10 backdrop-blur-md border border-white/20 rounded-full flex items-center justify-center shadow-lg">
+                      <span className="material-symbols-outlined text-green-400 text-3xl">verified</span>
+                    </div>
                   </div>
                   
                   <div>
@@ -436,24 +439,33 @@ const CreateProof = () => {
           {/* Features */}
           <div className="mt-16 grid grid-cols-1 md:grid-cols-3 gap-8 text-center max-w-4xl w-full">
             <div className="p-4 rounded-xl hover:bg-white/[0.02] transition-colors group">
-              <div className="w-12 h-12 mx-auto bg-slate-900 rounded-full flex items-center justify-center border border-white/5 mb-4 shadow-lg group-hover:scale-110 transition-transform">
-                <span className="material-symbols-outlined text-indigo-400">lock_clock</span>
+              <div className="relative w-12 h-12 mx-auto mb-4 group-hover:scale-110 transition-transform">
+                <div className="absolute inset-0 bg-gradient-to-r from-indigo-500 to-blue-500 opacity-20 rounded-full blur-sm"></div>
+                <div className="relative w-12 h-12 bg-white/10 backdrop-blur-md border border-white/20 rounded-full flex items-center justify-center shadow-lg">
+                  <span className="material-symbols-outlined text-indigo-400">lock_clock</span>
+                </div>
               </div>
               <h3 className="text-slate-200 font-medium mb-1">Timestamped</h3>
               <p className="text-sm text-slate-500">Irrefutable proof of when the data existed.</p>
             </div>
             
             <div className="p-4 rounded-xl hover:bg-white/[0.02] transition-colors group">
-              <div className="w-12 h-12 mx-auto bg-slate-900 rounded-full flex items-center justify-center border border-white/5 mb-4 shadow-lg group-hover:scale-110 transition-transform">
-                <span className="material-symbols-outlined text-violet-400">link</span>
+              <div className="relative w-12 h-12 mx-auto mb-4 group-hover:scale-110 transition-transform">
+                <div className="absolute inset-0 bg-gradient-to-r from-violet-500 to-purple-500 opacity-20 rounded-full blur-sm"></div>
+                <div className="relative w-12 h-12 bg-white/10 backdrop-blur-md border border-white/20 rounded-full flex items-center justify-center shadow-lg">
+                  <span className="material-symbols-outlined text-violet-400">link</span>
+                </div>
               </div>
               <h3 className="text-slate-200 font-medium mb-1">Blockchain Anchored</h3>
               <p className="text-sm text-slate-500">Secured permanently on the Ethereum network.</p>
             </div>
             
             <div className="p-4 rounded-xl hover:bg-white/[0.02] transition-colors group">
-              <div className="w-12 h-12 mx-auto bg-slate-900 rounded-full flex items-center justify-center border border-white/5 mb-4 shadow-lg group-hover:scale-110 transition-transform">
-                <span className="material-symbols-outlined text-blue-400">verified</span>
+              <div className="relative w-12 h-12 mx-auto mb-4 group-hover:scale-110 transition-transform">
+                <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-cyan-500 opacity-20 rounded-full blur-sm"></div>
+                <div className="relative w-12 h-12 bg-white/10 backdrop-blur-md border border-white/20 rounded-full flex items-center justify-center shadow-lg">
+                  <span className="material-symbols-outlined text-blue-400">verified</span>
+                </div>
               </div>
               <h3 className="text-slate-200 font-medium mb-1">Verifiable</h3>
               <p className="text-sm text-slate-500">Anyone can independently verify the authenticity.</p>
