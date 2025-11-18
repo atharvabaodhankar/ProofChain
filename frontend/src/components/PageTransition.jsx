@@ -1,8 +1,10 @@
 import { motion } from 'framer-motion';
 import { useLocation } from 'react-router-dom';
+import { useEffect, useState } from 'react';
 
 const PageTransition = ({ children }) => {
   const location = useLocation();
+  const [direction, setDirection] = useState(0);
   
   // Define the order of pages for slide direction
   const pageOrder = {
@@ -13,49 +15,56 @@ const PageTransition = ({ children }) => {
     '/history': 4
   };
   
-  // Get slide direction based on page order
-  const getSlideDirection = (pathname) => {
-    const currentIndex = pageOrder[pathname] || 0;
-    const prevIndex = pageOrder[location.state?.from] || 0;
+  useEffect(() => {
+    const currentIndex = pageOrder[location.pathname] || 0;
+    const previousPath = sessionStorage.getItem('previousPath');
+    const previousIndex = pageOrder[previousPath] || 0;
     
-    return currentIndex > prevIndex ? 1 : -1;
-  };
+    // Determine slide direction: 1 for right-to-left, -1 for left-to-right
+    const slideDirection = currentIndex > previousIndex ? 1 : -1;
+    setDirection(slideDirection);
+    
+    // Store current path for next navigation
+    sessionStorage.setItem('previousPath', location.pathname);
+  }, [location.pathname]);
   
-  const slideDirection = getSlideDirection(location.pathname);
-  
-  const pageVariants = {
-    initial: {
+  const variants = {
+    enter: (direction) => ({
+      x: direction > 0 ? '100%' : '-100%', // New page enters from opposite direction
       opacity: 0,
-      x: slideDirection * 100,
-      scale: 0.98,
-    },
-    in: {
-      opacity: 1,
+    }),
+    center: {
       x: 0,
-      scale: 1,
+      opacity: 1,
     },
-    out: {
+    exit: (direction) => ({
+      x: direction > 0 ? '-100%' : '100%', // Current page exits in navigation direction
       opacity: 0,
-      x: slideDirection * -100,
-      scale: 0.98,
-    }
+    }),
   };
   
-  const pageTransition = {
+  const transition = {
     type: "tween",
-    ease: [0.25, 0.46, 0.45, 0.94], // Custom cubic-bezier for smooth feel
-    duration: 0.4
+    ease: [0.25, 0.46, 0.45, 0.94], // Smooth cubic-bezier easing
+    duration: 0.4, // Optimal duration for smooth feel
   };
   
   return (
     <motion.div
       key={location.pathname}
-      initial="initial"
-      animate="in"
-      exit="out"
-      variants={pageVariants}
-      transition={pageTransition}
-      className="w-full"
+      custom={direction}
+      variants={variants}
+      initial="enter"
+      animate="center"
+      exit="exit"
+      transition={transition}
+      className="w-full min-h-screen"
+      style={{
+        position: 'absolute',
+        width: '100%',
+        top: 0,
+        left: 0,
+      }}
     >
       {children}
     </motion.div>
