@@ -3,6 +3,7 @@ const crypto = require('crypto');
 const multer = require('multer');
 const blockchainService = require('../config/blockchain');
 const { authenticateUser, optionalAuth } = require('../middleware/auth');
+const proofDB = require('../models/Proof');
 
 const router = express.Router();
 
@@ -24,7 +25,7 @@ const computeHash = (data) => {
 };
 
 // Create proof from text
-router.post('/text', optionalAuth, async (req, res) => {
+router.post('/text', authenticateUser, async (req, res) => {
   try {
     const { text } = req.body;
     
@@ -46,8 +47,34 @@ router.post('/text', optionalAuth, async (req, res) => {
     const hash = computeHash(text);
     console.log('Creating proof for text hash:', hash);
     
+    // Check if proof already exists in our database
+    const existingProof = proofDB.getProofByHash(hash);
+    if (existingProof) {
+      return res.status(409).json({
+        error: 'Conflict',
+        message: `A proof for this content already exists, created by ${existingProof.userName}`,
+        existingProof: {
+          hash: existingProof.hash,
+          createdBy: existingProof.userName,
+          createdAt: existingProof.createdAt
+        }
+      });
+    }
+    
     // Create proof on blockchain
     const proofResult = await blockchainService.createProof(hash);
+    
+    // Store in our database with user info
+    proofDB.storeProof({
+      hash,
+      userId: req.user.uid,
+      userEmail: req.user.email,
+      userName: req.user.name || req.user.email.split('@')[0],
+      transactionHash: proofResult.transactionHash,
+      blockNumber: proofResult.blockNumber,
+      timestamp: proofResult.timestamp,
+      type: 'text'
+    });
     
     res.json({
       success: true,
@@ -58,7 +85,8 @@ router.post('/text', optionalAuth, async (req, res) => {
         timestamp: proofResult.timestamp,
         gasUsed: proofResult.gasUsed,
         type: 'text',
-        user: req.user?.email || 'anonymous'
+        createdBy: req.user.name || req.user.email.split('@')[0],
+        userEmail: req.user.email
       },
       message: 'Proof created successfully'
     });
@@ -69,7 +97,7 @@ router.post('/text', optionalAuth, async (req, res) => {
     if (error.message.includes('Proof already exists')) {
       return res.status(409).json({
         error: 'Conflict',
-        message: 'A proof for this content already exists'
+        message: 'A proof for this content already exists on the blockchain'
       });
     }
     
@@ -148,35 +176,57 @@ router.post('/verify/text', async (req, res) => {
     // Compute hash
     const hash = computeHash(text);
     
-    // Verify on blockchain
-    const verification = await blockchainService.verifyProof(hash);
+    // First check our database for creator info
+    const proofData = proofDB.getProofWithCreator(hash);
     
-    if (verification.exists) {
-      // Get additional event data
-      const events = await blockchainService.getProofEvents(hash);
-      const event = events[0]; // Get the first (should be only) event
-      
+    if (proofData) {
+      // We have the proof in our database with creator info
       res.json({
         success: true,
         verified: true,
         proof: {
-          hash,
-          timestamp: verification.timestamp,
-          blockNumber: event?.blockNumber,
-          transactionHash: event?.transactionHash,
-          creator: event?.creator,
-          creatorName: 'Anonymous User', // We'll enhance this later with a user mapping
-          type: 'text'
+          hash: proofData.hash,
+          timestamp: proofData.timestamp,
+          blockNumber: proofData.blockNumber,
+          transactionHash: proofData.transactionHash,
+          creator: 'ProofChain User', // Since we use server wallet
+          creatorName: proofData.creatorName,
+          creatorEmail: proofData.creatorEmail,
+          type: proofData.type,
+          createdAt: proofData.createdAt
         },
         message: 'Proof verified successfully'
       });
     } else {
-      res.json({
-        success: true,
-        verified: false,
-        hash,
-        message: 'No proof found for this content'
-      });
+      // Check blockchain for older proofs (before database implementation)
+      const verification = await blockchainService.verifyProof(hash);
+      
+      if (verification.exists) {
+        const events = await blockchainService.getProofEvents(hash);
+        const event = events[0];
+        
+        res.json({
+          success: true,
+          verified: true,
+          proof: {
+            hash,
+            timestamp: verification.timestamp,
+            blockNumber: event?.blockNumber,
+            transactionHash: event?.transactionHash,
+            creator: event?.creator,
+            creatorName: 'Legacy User', // Old proofs before user tracking
+            type: 'text'
+          },
+          message: 'Proof verified successfully (legacy proof)'
+        });
+      } else {
+        res.json({
+          success: true,
+          verified: false,
+          hash,
+          message: 'No proof found for this content'
+        });
+      }
     }
     
   } catch (error) {
@@ -316,6 +366,56 @@ router.get('/status', async (req, res) => {
     res.status(500).json({
       error: 'Internal Server Error',
       message: 'Failed to get blockchain status'
+    });
+  }
+});
+
+// Get user's proof history
+router.get('/history', authenticateUser, async (req, res) => {
+  try {
+    const userProofs = proofDB.getUserProofs(req.user.uid);
+    
+    res.json({
+      success: true,
+      proofs: userProofs.map(proof => ({
+        hash: proof.hash,
+        type: proof.type,
+        fileName: proof.fileName,
+        transactionHash: proof.transactionHash,
+        blockNumber: proof.blockNumber,
+        timestamp: proof.timestamp,
+        createdAt: proof.createdAt
+      })),
+      total: userProofs.length,
+      message: 'History retrieved successfully'
+    });
+  } catch (error) {
+    console.error('Error getting user history:', error.message);
+    res.status(500).json({
+      error: 'Internal Server Error',
+      message: 'Failed to get user history'
+    });
+  }
+});
+
+// Get platform statistics
+router.get('/stats', async (req, res) => {
+  try {
+    const stats = proofDB.getStats();
+    
+    res.json({
+      success: true,
+      stats: {
+        totalProofs: stats.totalProofs,
+        totalUsers: stats.totalUsers,
+        proofsToday: stats.proofsToday
+      }
+    });
+  } catch (error) {
+    console.error('Error getting stats:', error.message);
+    res.status(500).json({
+      error: 'Internal Server Error',
+      message: 'Failed to get statistics'
     });
   }
 });
