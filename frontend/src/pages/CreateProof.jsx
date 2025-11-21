@@ -407,6 +407,18 @@ const CreateProof = () => {
                       </div>
                       
                       <div>
+                        <label className="text-xs text-slate-500 uppercase tracking-wider font-semibold">Creator</label>
+                        <div className="flex items-center gap-2 mt-1">
+                          <div className="flex-1">
+                            <p className="text-xs sm:text-sm text-slate-200 font-medium">
+                              {user?.displayName || user?.email || 'You'}
+                            </p>
+                            <p className="text-xs text-slate-400">Proof Owner</p>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div>
                         <label className="text-xs text-slate-500 uppercase tracking-wider font-semibold">Block Number</label>
                         <p className="text-xs sm:text-sm font-mono text-slate-200 mt-1">{proof.blockNumber}</p>
                       </div>
