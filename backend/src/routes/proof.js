@@ -165,6 +165,7 @@ router.post('/verify/text', async (req, res) => {
           blockNumber: event?.blockNumber,
           transactionHash: event?.transactionHash,
           creator: event?.creator,
+          creatorName: 'Anonymous User', // We'll enhance this later with a user mapping
           type: 'text'
         },
         message: 'Proof verified successfully'
@@ -219,6 +220,7 @@ router.post('/verify/file', upload.single('file'), async (req, res) => {
           blockNumber: event?.blockNumber,
           transactionHash: event?.transactionHash,
           creator: event?.creator,
+          creatorName: 'Anonymous User', // We'll enhance this later with a user mapping
           type: 'file',
           fileName: originalname,
           fileType: mimetype,
@@ -273,7 +275,8 @@ router.get('/hash/:hash', async (req, res) => {
           timestamp: verification.timestamp,
           blockNumber: event?.blockNumber,
           transactionHash: event?.transactionHash,
-          creator: event?.creator
+          creator: event?.creator,
+          creatorName: 'Anonymous User' // We'll enhance this later with a user mapping
         }
       });
     } else {
