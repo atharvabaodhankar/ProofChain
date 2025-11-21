@@ -439,6 +439,26 @@ const VerifyProof = () => {
                       </div>
                     )}
                     
+                    {verification.proof.creator && (
+                      <div>
+                        <label className="text-xs text-slate-500 uppercase tracking-wider font-semibold">Creator</label>
+                        <div className="flex items-center gap-2 mt-1">
+                          <div className="flex-1">
+                            <p className="text-xs sm:text-sm text-slate-200 font-medium">
+                              {verification.proof.creatorName || 'Anonymous User'}
+                            </p>
+                            <code className="text-xs text-slate-400 font-mono break-all">{verification.proof.creator}</code>
+                          </div>
+                          <button
+                            onClick={() => copyToClipboard(verification.proof.creator)}
+                            className="p-1 rounded hover:bg-white/10 text-slate-500 hover:text-slate-300 transition-colors flex-shrink-0"
+                          >
+                            <span className="material-symbols-outlined text-[14px] sm:text-[16px]">content_copy</span>
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                    
                     {verification.proof.blockNumber && (
                       <div>
                         <label className="text-xs text-slate-500 uppercase tracking-wider font-semibold">Block Number</label>
