@@ -24,7 +24,7 @@ const computeHash = (data) => {
 };
 
 // Create proof from text
-router.post('/text', authenticateUser, async (req, res) => {
+router.post('/text', optionalAuth, async (req, res) => {
   try {
     const { text } = req.body;
     
@@ -58,7 +58,7 @@ router.post('/text', authenticateUser, async (req, res) => {
         timestamp: proofResult.timestamp,
         gasUsed: proofResult.gasUsed,
         type: 'text',
-        user: req.user.email
+        user: req.user?.email || 'anonymous'
       },
       message: 'Proof created successfully'
     });
@@ -81,7 +81,7 @@ router.post('/text', authenticateUser, async (req, res) => {
 });
 
 // Create proof from file
-router.post('/file', authenticateUser, upload.single('file'), async (req, res) => {
+router.post('/file', optionalAuth, upload.single('file'), async (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({
@@ -111,7 +111,7 @@ router.post('/file', authenticateUser, upload.single('file'), async (req, res) =
         fileName: originalname,
         fileType: mimetype,
         fileSize: size,
-        user: req.user.email
+        user: req.user?.email || 'anonymous'
       },
       message: 'Proof created successfully'
     });
