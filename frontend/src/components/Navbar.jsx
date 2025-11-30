@@ -86,17 +86,12 @@ const Navbar = () => {
                   </button>
                 </div>
               ) : (
-                <div className="flex items-center gap-3 lg:gap-4">
-                  <button
-                    onClick={login}
-                    className="text-sm font-medium text-slate-400 hover:text-white transition-colors"
-                  >
-                    Sign In
-                  </button>
-                  <button className="bg-white/5 hover:bg-white/10 text-white text-sm font-medium px-3 lg:px-4 py-2 rounded-lg border border-white/5 transition-all">
-                    Connect Wallet
-                  </button>
-                </div>
+                <button
+                  onClick={login}
+                  className="bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white shadow-lg shadow-indigo-500/25 text-sm font-medium px-4 lg:px-6 py-2 rounded-lg transition-all"
+                >
+                  Sign In
+                </button>
               )}
             </div>
           </div>
@@ -168,20 +163,15 @@ const Navbar = () => {
                     </button>
                   </div>
                 ) : (
-                  <div className="space-y-2">
-                    <button
-                      onClick={() => {
-                        login();
-                        closeMobileMenu();
-                      }}
-                      className="w-full text-left px-3 py-2 rounded-lg text-base font-medium text-slate-300 hover:text-white hover:bg-white/10 transition-colors"
-                    >
-                      Sign In
-                    </button>
-                    <button className="w-full text-left px-3 py-2 rounded-lg text-base font-medium bg-white/5 hover:bg-white/10 text-white border border-white/5 transition-all">
-                      Connect Wallet
-                    </button>
-                  </div>
+                  <button
+                    onClick={() => {
+                      login();
+                      closeMobileMenu();
+                    }}
+                    className="w-full bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white shadow-lg shadow-indigo-500/25 py-3 px-4 rounded-lg font-medium transition-all text-center"
+                  >
+                    Sign In
+                  </button>
                 )}
               </div>
             </div>
