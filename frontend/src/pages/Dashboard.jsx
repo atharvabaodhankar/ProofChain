@@ -6,11 +6,19 @@ import toast from 'react-hot-toast';
 const Dashboard = () => {
   const { user, getAuthHeaders } = useAuth();
   const [blockchainStatus, setBlockchainStatus] = useState(null);
+  const [userStats, setUserStats] = useState(null);
+  const [recentProofs, setRecentProofs] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchBlockchainStatus();
-  }, []);
+    if (user) {
+      fetchBlockchainStatus();
+      fetchUserStats();
+      fetchRecentActivity();
+    } else {
+      setLoading(false);
+    }
+  }, [user]);
 
   const fetchBlockchainStatus = async () => {
     try {
@@ -27,9 +35,63 @@ const Dashboard = () => {
     } catch (error) {
       console.error('Error fetching blockchain status:', error);
       toast.error('Failed to connect to backend');
+    }
+  };
+
+  const fetchUserStats = async () => {
+    try {
+      const response = await fetch('/api/proof/history?limit=5', {
+        headers: getAuthHeaders()
+      });
+      const data = await response.json();
+      
+      if (data.success) {
+        const proofs = data.proofs;
+        const lastActivity = proofs.length > 0 ? proofs[0].createdAt : null;
+        
+        setUserStats({
+          totalProofs: proofs.length,
+          lastActivity: lastActivity
+        });
+      }
+    } catch (error) {
+      console.error('Error fetching user stats:', error);
+    }
+  };
+
+  const fetchRecentActivity = async () => {
+    try {
+      const response = await fetch('/api/proof/history?limit=3', {
+        headers: getAuthHeaders()
+      });
+      const data = await response.json();
+      
+      if (data.success) {
+        setRecentProofs(data.proofs);
+      }
+    } catch (error) {
+      console.error('Error fetching recent activity:', error);
     } finally {
       setLoading(false);
     }
+  };
+
+  const formatDate = (dateString) => {
+    if (!dateString) return 'Never';
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffTime = Math.abs(now - date);
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    
+    if (diffDays === 1) return 'Today';
+    if (diffDays === 2) return 'Yesterday';
+    if (diffDays <= 7) return `${diffDays - 1} days ago`;
+    
+    return date.toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: date.getFullYear() !== now.getFullYear() ? 'numeric' : undefined
+    });
   };
 
   if (!user) {
@@ -155,15 +217,22 @@ const Dashboard = () => {
             <div className="space-y-2 sm:space-y-3">
               <div className="flex justify-between items-center">
                 <span className="text-xs sm:text-sm text-slate-400">Proofs Created</span>
-                <span className="font-semibold text-white text-sm sm:text-base">-</span>
+                <span className="font-semibold text-white text-sm sm:text-base">
+                  {userStats ? userStats.totalProofs : '-'}
+                </span>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-xs sm:text-sm text-slate-400">Last Activity</span>
-                <span className="font-semibold text-xs sm:text-sm text-white">-</span>
+                <span className="font-semibold text-xs sm:text-sm text-white">
+                  {userStats ? formatDate(userStats.lastActivity) : '-'}
+                </span>
               </div>
-              <p className="text-xs text-slate-500 mt-2">
-                Activity tracking coming soon
-              </p>
+              <button
+                onClick={() => window.location.href = '/history'}
+                className="w-full text-left text-xs text-indigo-400 hover:text-indigo-300 underline mt-2"
+              >
+                View full history →
+              </button>
             </div>
           </div>
         </div>
@@ -252,26 +321,79 @@ const Dashboard = () => {
         </div>
       )}
 
-      {/* Recent Activity Placeholder */}
+      {/* Recent Activity */}
       <div className="relative group mb-6 lg:mb-8">
         <div className="absolute -inset-1 bg-gradient-to-r from-orange-500 via-red-500 to-pink-500 rounded-2xl blur-xl opacity-20 group-hover:opacity-30 transition duration-1000"></div>
         <div className="relative bg-slate-900/40 backdrop-blur-xl border border-white/10 shadow-2xl rounded-2xl p-4 sm:p-6">
-          <h3 className="font-semibold text-white mb-4 sm:mb-6 text-lg sm:text-xl flex items-center gap-2">
-            <Clock className="h-5 w-5 sm:h-6 sm:w-6 text-orange-400" />
-            Recent Activity
-          </h3>
-          <div className="text-center py-8 sm:py-12">
-            <div className="relative w-12 h-12 sm:w-16 sm:h-16 mx-auto mb-3 sm:mb-4">
-              <div className="absolute inset-0 bg-gradient-to-r from-orange-500 to-red-500 opacity-20 rounded-full blur-sm"></div>
-              <div className="relative w-full h-full bg-white/10 backdrop-blur-md border border-white/20 rounded-full flex items-center justify-center shadow-lg">
-                <Clock className="h-6 w-6 sm:h-8 sm:w-8 text-slate-500" />
-              </div>
-            </div>
-            <p className="text-slate-300 mb-2 text-base sm:text-lg">No recent activity</p>
-            <p className="text-xs sm:text-sm text-slate-500">
-              Your proof creation and verification history will appear here
-            </p>
+          <div className="flex items-center justify-between mb-4 sm:mb-6">
+            <h3 className="font-semibold text-white text-lg sm:text-xl flex items-center gap-2">
+              <Clock className="h-5 w-5 sm:h-6 sm:w-6 text-orange-400" />
+              Recent Activity
+            </h3>
+            {recentProofs.length > 0 && (
+              <button
+                onClick={() => window.location.href = '/history'}
+                className="text-xs sm:text-sm text-orange-400 hover:text-orange-300 underline"
+              >
+                View all
+              </button>
+            )}
           </div>
+          
+          {recentProofs.length === 0 ? (
+            <div className="text-center py-8 sm:py-12">
+              <div className="relative w-12 h-12 sm:w-16 sm:h-16 mx-auto mb-3 sm:mb-4">
+                <div className="absolute inset-0 bg-gradient-to-r from-orange-500 to-red-500 opacity-20 rounded-full blur-sm"></div>
+                <div className="relative w-full h-full bg-white/10 backdrop-blur-md border border-white/20 rounded-full flex items-center justify-center shadow-lg">
+                  <Clock className="h-6 w-6 sm:h-8 sm:w-8 text-slate-500" />
+                </div>
+              </div>
+              <p className="text-slate-300 mb-2 text-base sm:text-lg">No recent activity</p>
+              <p className="text-xs sm:text-sm text-slate-500">
+                Your proof creation and verification history will appear here
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-3 sm:space-y-4">
+              {recentProofs.map((proof, index) => (
+                <div key={proof.hash} className="flex items-center gap-3 sm:gap-4 p-3 sm:p-4 bg-slate-950/30 rounded-xl border border-white/5">
+                  <div className="relative w-8 h-8 sm:w-10 sm:h-10 flex-shrink-0">
+                    <div className="absolute inset-0 bg-gradient-to-r from-orange-500 to-red-500 opacity-20 rounded-full blur-sm"></div>
+                    <div className="relative w-full h-full bg-white/10 backdrop-blur-md border border-white/20 rounded-full flex items-center justify-center shadow-lg">
+                      {proof.type === 'file' ? (
+                        <span className="material-symbols-outlined text-orange-400 text-sm sm:text-base">description</span>
+                      ) : (
+                        <Hash className="h-4 w-4 sm:h-5 sm:w-5 text-orange-400" />
+                      )}
+                    </div>
+                  </div>
+                  
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2 mb-1">
+                      <p className="text-white font-medium text-sm sm:text-base truncate">
+                        {proof.type === 'file' ? (proof.fileName || 'File Proof') : 'Text Proof'}
+                      </p>
+                      <span className="px-2 py-0.5 bg-orange-500/20 text-orange-300 text-xs rounded-full flex-shrink-0">
+                        {proof.type}
+                      </span>
+                    </div>
+                    <p className="text-xs sm:text-sm text-slate-400">
+                      {formatDate(proof.createdAt)}
+                    </p>
+                  </div>
+                  
+                  <a
+                    href={`https://sepolia.etherscan.io/tx/${proof.transactionHash}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex-shrink-0 p-2 rounded-lg hover:bg-white/10 text-slate-400 hover:text-white transition-colors"
+                  >
+                    <ExternalLink className="h-4 w-4" />
+                  </a>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 

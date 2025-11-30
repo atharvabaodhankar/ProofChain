@@ -1,4 +1,4 @@
-const { admin } = require('../config/firebase');
+const { admin, initializeFirebase } = require('../config/firebase');
 
 class FirestoreProofService {
   constructor() {
@@ -8,17 +8,25 @@ class FirestoreProofService {
 
   initialize() {
     try {
+      // Initialize Firebase first
+      initializeFirebase();
       this.db = admin.firestore();
       console.log('✅ Firestore proof service initialized');
     } catch (error) {
       console.error('❌ Firestore proof service initialization failed:', error.message);
-      throw error;
+      // Don't throw error to allow fallback to in-memory storage
+      console.warn('⚠️  Falling back to in-memory storage');
     }
   }
 
   // Store a new proof in Firestore
   async storeProof(proofData) {
     try {
+      if (!this.db) {
+        console.warn('Firestore not available, skipping proof storage');
+        return false;
+      }
+
       const { hash, userId, userEmail, userName, transactionHash, blockNumber, timestamp, type, fileName, fileType, fileSize } = proofData;
       
       const proofDoc = {
@@ -64,6 +72,10 @@ class FirestoreProofService {
   // Get proof by hash
   async getProofByHash(hash) {
     try {
+      if (!this.db) {
+        return null;
+      }
+
       const doc = await this.db.collection('proofs').doc(hash).get();
       
       if (!doc.exists) {
@@ -84,6 +96,10 @@ class FirestoreProofService {
   // Get all proofs for a user
   async getUserProofs(userId, limit = 50, orderBy = 'createdAt', orderDirection = 'desc') {
     try {
+      if (!this.db) {
+        return [];
+      }
+
       const snapshot = await this.db
         .collection('users')
         .doc(userId)
@@ -128,6 +144,14 @@ class FirestoreProofService {
   // Get platform statistics
   async getStats() {
     try {
+      if (!this.db) {
+        return {
+          totalProofs: 0,
+          totalUsers: 0,
+          proofsToday: 0
+        };
+      }
+
       // Get total proofs count
       const proofsSnapshot = await this.db.collection('proofs').count().get();
       const totalProofs = proofsSnapshot.data().count;
@@ -166,6 +190,10 @@ class FirestoreProofService {
   // Get recent proofs (for admin/public view)
   async getRecentProofs(limit = 10) {
     try {
+      if (!this.db) {
+        return [];
+      }
+
       const snapshot = await this.db
         .collection('proofs')
         .orderBy('createdAt', 'desc')
