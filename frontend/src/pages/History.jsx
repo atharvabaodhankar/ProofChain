@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Clock, FileText, Shield, ExternalLink, Hash, Calendar, User } from 'lucide-react';
+import { Clock, FileText, Shield, ExternalLink, Hash, Calendar, User, Search, Trash2, Download, Filter } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import toast from 'react-hot-toast';
 
@@ -8,6 +8,11 @@ const History = () => {
   const [proofs, setProofs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filterType, setFilterType] = useState('all');
+  const [sortBy, setSortBy] = useState('createdAt');
+  const [sortDirection, setSortDirection] = useState('desc');
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -20,7 +25,14 @@ const History = () => {
 
   const fetchUserHistory = async () => {
     try {
-      const response = await fetch('/api/proof/history', {
+      setLoading(true);
+      const params = new URLSearchParams({
+        limit: '100',
+        orderBy: sortBy,
+        orderDirection: sortDirection
+      });
+      
+      const response = await fetch(`/api/proof/history?${params}`, {
         headers: getAuthHeaders()
       });
       const data = await response.json();
