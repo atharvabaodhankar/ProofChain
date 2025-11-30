@@ -1,17 +1,19 @@
 const { ethers } = require('ethers');
 
-// Contract ABI (will be updated after deployment)
+// Contract ABI (updated with creator name functionality)
 const CONTRACT_ABI = [
-  "event ProofCreated(bytes32 indexed dataHash, address indexed creator, uint256 timestamp, uint256 blockNumber)",
-  "function createProof(bytes32 _dataHash) external",
-  "function verifyProof(bytes32 _dataHash) external view returns (bool exists, uint256 timestamp)",
+  "event ProofCreated(bytes32 indexed dataHash, address indexed creator, string creatorName, uint256 timestamp, uint256 blockNumber)",
+  "function createProof(bytes32 _dataHash, string memory _creatorName) external",
+  "function verifyProof(bytes32 _dataHash) external view returns (bool exists, uint256 timestamp, string memory creatorName)",
   "function getProofTimestamp(bytes32 _dataHash) external view returns (uint256)",
+  "function getProofCreatorName(bytes32 _dataHash) external view returns (string memory)",
   "function proofExists(bytes32) external view returns (bool)",
-  "function proofTimestamp(bytes32) external view returns (uint256)"
+  "function proofTimestamp(bytes32) external view returns (uint256)",
+  "function proofCreatorName(bytes32) external view returns (string memory)"
 ];
 
-// Contract address (deployed on Sepolia)
-const CONTRACT_ADDRESS = process.env.CONTRACT_ADDRESS || "0xD384D316820d805e062031eF47C1f44F86ADF8cB";
+// Contract address (deployed on Sepolia with creator name functionality)
+const CONTRACT_ADDRESS = process.env.CONTRACT_ADDRESS || "0xd047c07FBABe11702d80dE0f1231245b6CCdB43e";
 
 class BlockchainService {
   constructor() {
@@ -53,23 +55,32 @@ class BlockchainService {
     }
   }
 
-  async createProof(dataHash) {
+  async createProof(dataHash, creatorName) {
     try {
       if (!this.contract) {
         throw new Error('Contract not initialized. Please deploy the contract first.');
       }
 
-      console.log('Creating proof for hash:', dataHash);
+      console.log('Creating proof for hash:', dataHash, 'by:', creatorName);
       
       // Convert string hash to bytes32 if needed
       const hashBytes32 = dataHash.startsWith('0x') ? dataHash : '0x' + dataHash;
       
+      // Validate creator name
+      if (!creatorName || creatorName.trim().length === 0) {
+        throw new Error('Creator name is required');
+      }
+      
+      if (creatorName.length > 100) {
+        throw new Error('Creator name too long (max 100 characters)');
+      }
+      
       // Estimate gas
-      const gasEstimate = await this.contract.createProof.estimateGas(hashBytes32);
+      const gasEstimate = await this.contract.createProof.estimateGas(hashBytes32, creatorName);
       console.log('Estimated gas:', gasEstimate.toString());
       
       // Send transaction
-      const tx = await this.contract.createProof(hashBytes32, {
+      const tx = await this.contract.createProof(hashBytes32, creatorName, {
         gasLimit: gasEstimate * 120n / 100n // Add 20% buffer
       });
       
@@ -95,6 +106,7 @@ class BlockchainService {
         eventData = {
           dataHash: parsed.args.dataHash,
           creator: parsed.args.creator,
+          creatorName: parsed.args.creatorName,
           timestamp: Number(parsed.args.timestamp),
           blockNumber: Number(parsed.args.blockNumber)
         };
@@ -106,6 +118,7 @@ class BlockchainService {
         blockNumber: receipt.blockNumber,
         gasUsed: receipt.gasUsed.toString(),
         timestamp: eventData?.timestamp || Math.floor(Date.now() / 1000),
+        creatorName: eventData?.creatorName || creatorName,
         eventData
       };
     } catch (error) {
@@ -122,11 +135,12 @@ class BlockchainService {
 
       const hashBytes32 = dataHash.startsWith('0x') ? dataHash : '0x' + dataHash;
       
-      const [exists, timestamp] = await this.contract.verifyProof(hashBytes32);
+      const [exists, timestamp, creatorName] = await this.contract.verifyProof(hashBytes32);
       
       return {
         exists,
         timestamp: Number(timestamp),
+        creatorName: creatorName || '',
         hash: dataHash
       };
     } catch (error) {
@@ -158,6 +172,7 @@ class BlockchainService {
         blockNumber: event.blockNumber,
         dataHash: event.args.dataHash,
         creator: event.args.creator,
+        creatorName: event.args.creatorName || '',
         timestamp: Number(event.args.timestamp),
         blockTimestamp: Number(event.args.blockNumber)
       }));
