@@ -61,8 +61,9 @@ router.post('/text', authenticateUser, async (req, res) => {
       });
     }
     
-    // Create proof on blockchain
-    const proofResult = await blockchainService.createProof(hash);
+    // Create proof on blockchain with creator name
+    const creatorName = req.user.name || req.user.email.split('@')[0];
+    const proofResult = await blockchainService.createProof(hash, creatorName);
     
     // Store in our database with user info
     proofDB.storeProof({
@@ -124,8 +125,9 @@ router.post('/file', optionalAuth, upload.single('file'), async (req, res) => {
     const hash = computeHash(buffer);
     console.log(`Creating proof for file "${originalname}" (${mimetype}, ${size} bytes), hash:`, hash);
     
-    // Create proof on blockchain
-    const proofResult = await blockchainService.createProof(hash);
+    // Create proof on blockchain with creator name (use email if no user authenticated)
+    const creatorName = req.user ? (req.user.name || req.user.email.split('@')[0]) : 'Anonymous User';
+    const proofResult = await blockchainService.createProof(hash, creatorName);
     
     res.json({
       success: true,
@@ -214,10 +216,10 @@ router.post('/verify/text', async (req, res) => {
             blockNumber: event?.blockNumber,
             transactionHash: event?.transactionHash,
             creator: event?.creator,
-            creatorName: 'Legacy User', // Old proofs before user tracking
+            creatorName: verification.creatorName || event?.creatorName || 'Legacy User',
             type: 'text'
           },
-          message: 'Proof verified successfully (legacy proof)'
+          message: 'Proof verified successfully'
         });
       } else {
         res.json({
@@ -270,7 +272,7 @@ router.post('/verify/file', upload.single('file'), async (req, res) => {
           blockNumber: event?.blockNumber,
           transactionHash: event?.transactionHash,
           creator: event?.creator,
-          creatorName: 'Anonymous User', // We'll enhance this later with a user mapping
+          creatorName: verification.creatorName || event?.creatorName || 'Anonymous User',
           type: 'file',
           fileName: originalname,
           fileType: mimetype,
@@ -326,7 +328,7 @@ router.get('/hash/:hash', async (req, res) => {
           blockNumber: event?.blockNumber,
           transactionHash: event?.transactionHash,
           creator: event?.creator,
-          creatorName: 'Anonymous User' // We'll enhance this later with a user mapping
+          creatorName: verification.creatorName || event?.creatorName || 'Anonymous User'
         }
       });
     } else {
