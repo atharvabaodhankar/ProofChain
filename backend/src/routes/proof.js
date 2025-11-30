@@ -3,7 +3,7 @@ const crypto = require('crypto');
 const multer = require('multer');
 const blockchainService = require('../config/blockchain');
 const { authenticateUser, optionalAuth } = require('../middleware/auth');
-const proofDB = require('../models/Proof');
+const firestoreProofService = require('../services/firestoreProofService');
 
 const router = express.Router();
 
@@ -47,8 +47,8 @@ router.post('/text', authenticateUser, async (req, res) => {
     const hash = computeHash(text);
     console.log('Creating proof for text hash:', hash);
     
-    // Check if proof already exists in our database
-    const existingProof = proofDB.getProofByHash(hash);
+    // Check if proof already exists in Firestore
+    const existingProof = await firestoreProofService.getProofByHash(hash);
     if (existingProof) {
       return res.status(409).json({
         error: 'Conflict',
@@ -65,8 +65,8 @@ router.post('/text', authenticateUser, async (req, res) => {
     const creatorName = req.user.name || req.user.email.split('@')[0];
     const proofResult = await blockchainService.createProof(hash, creatorName);
     
-    // Store in our database with user info
-    proofDB.storeProof({
+    // Store in Firestore with user info
+    await firestoreProofService.storeProof({
       hash,
       userId: req.user.uid,
       userEmail: req.user.email,
@@ -129,6 +129,23 @@ router.post('/file', optionalAuth, upload.single('file'), async (req, res) => {
     const creatorName = req.user ? (req.user.name || req.user.email.split('@')[0]) : 'Anonymous User';
     const proofResult = await blockchainService.createProof(hash, creatorName);
     
+    // Store in Firestore if user is authenticated
+    if (req.user) {
+      await firestoreProofService.storeProof({
+        hash,
+        userId: req.user.uid,
+        userEmail: req.user.email,
+        userName: req.user.name || req.user.email.split('@')[0],
+        transactionHash: proofResult.transactionHash,
+        blockNumber: proofResult.blockNumber,
+        timestamp: proofResult.timestamp,
+        type: 'file',
+        fileName: originalname,
+        fileType: mimetype,
+        fileSize: size
+      });
+    }
+    
     res.json({
       success: true,
       proof: {
@@ -178,8 +195,8 @@ router.post('/verify/text', async (req, res) => {
     // Compute hash
     const hash = computeHash(text);
     
-    // First check our database for creator info
-    const proofData = proofDB.getProofWithCreator(hash);
+    // First check Firestore for creator info
+    const proofData = await firestoreProofService.getProofWithCreator(hash);
     
     if (proofData) {
       // We have the proof in our database with creator info
@@ -375,7 +392,14 @@ router.get('/status', async (req, res) => {
 // Get user's proof history
 router.get('/history', authenticateUser, async (req, res) => {
   try {
-    const userProofs = proofDB.getUserProofs(req.user.uid);
+    const { limit = 50, orderBy = 'createdAt', orderDirection = 'desc' } = req.query;
+    
+    const userProofs = await firestoreProofService.getUserProofs(
+      req.user.uid, 
+      parseInt(limit), 
+      orderBy, 
+      orderDirection
+    );
     
     res.json({
       success: true,
@@ -383,6 +407,8 @@ router.get('/history', authenticateUser, async (req, res) => {
         hash: proof.hash,
         type: proof.type,
         fileName: proof.fileName,
+        fileType: proof.fileType,
+        fileSize: proof.fileSize,
         transactionHash: proof.transactionHash,
         blockNumber: proof.blockNumber,
         timestamp: proof.timestamp,
@@ -403,7 +429,7 @@ router.get('/history', authenticateUser, async (req, res) => {
 // Get platform statistics
 router.get('/stats', async (req, res) => {
   try {
-    const stats = proofDB.getStats();
+    const stats = await firestoreProofService.getStats();
     
     res.json({
       success: true,
@@ -423,3 +449,100 @@ router.get('/stats', async (req, res) => {
 });
 
 module.exports = router;
+// Get recent proofs (public endpoint for showcasing platform activity)
+router.get('/recent', async (req, res) => {
+  try {
+    const { limit = 10 } = req.query;
+    const recentProofs = await firestoreProofService.getRecentProofs(parseInt(limit));
+    
+    res.json({
+      success: true,
+      proofs: recentProofs,
+      message: 'Recent proofs retrieved successfully'
+    });
+  } catch (error) {
+    console.error('Error getting recent proofs:', error.message);
+    res.status(500).json({
+      error: 'Internal Server Error',
+      message: 'Failed to get recent proofs'
+    });
+  }
+});
+
+// Search proofs (admin endpoint)
+router.get('/search', authenticateUser, async (req, res) => {
+  try {
+    const { query, limit = 20 } = req.query;
+    
+    if (!query || query.trim().length < 2) {
+      return res.status(400).json({
+        error: 'Bad Request',
+        message: 'Search query must be at least 2 characters'
+      });
+    }
+    
+    const searchResults = await firestoreProofService.searchProofs(query.trim(), parseInt(limit));
+    
+    res.json({
+      success: true,
+      proofs: searchResults,
+      query: query.trim(),
+      message: 'Search completed successfully'
+    });
+  } catch (error) {
+    console.error('Error searching proofs:', error.message);
+    res.status(500).json({
+      error: 'Internal Server Error',
+      message: 'Failed to search proofs'
+    });
+  }
+});
+
+// Delete user's proof history (GDPR compliance)
+router.delete('/history', authenticateUser, async (req, res) => {
+  try {
+    await firestoreProofService.deleteUserProofs(req.user.uid);
+    
+    res.json({
+      success: true,
+      message: 'All proof history deleted successfully'
+    });
+  } catch (error) {
+    console.error('Error deleting user history:', error.message);
+    res.status(500).json({
+      error: 'Internal Server Error',
+      message: 'Failed to delete user history'
+    });
+  }
+});
+
+// Update user profile info in existing proofs
+router.put('/user-info', authenticateUser, async (req, res) => {
+  try {
+    const { name } = req.body;
+    
+    if (!name || name.trim().length === 0) {
+      return res.status(400).json({
+        error: 'Bad Request',
+        message: 'Name is required'
+      });
+    }
+    
+    await firestoreProofService.updateUserInfo(
+      req.user.uid, 
+      name.trim(), 
+      req.user.email
+    );
+    
+    res.json({
+      success: true,
+      message: 'User information updated in all proofs'
+    });
+  } catch (error) {
+    console.error('Error updating user info:', error.message);
+    res.status(500).json({
+      error: 'Internal Server Error',
+      message: 'Failed to update user information'
+    });
+  }
+});
