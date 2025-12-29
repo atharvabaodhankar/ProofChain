@@ -2,10 +2,12 @@ import { useState } from 'react';
 import { ExternalLink, AlertCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useAuth } from '../contexts/AuthContext';
-import { API_ENDPOINTS, authenticatedApiCall } from '../config/api';
+import { API_ENDPOINTS } from '../config/api';
+import { useAuthenticatedApi } from '../hooks/useAuthenticatedApi';
 
 const CreateProof = () => {
-  const { user, login, idToken } = useAuth();
+  const { user, login } = useAuth();
+  const { makeAuthenticatedCall, isAuthenticated } = useAuthenticatedApi();
   const [activeTab, setActiveTab] = useState('text');
   const [textContent, setTextContent] = useState('');
   const [selectedFile, setSelectedFile] = useState(null);
@@ -55,20 +57,19 @@ const CreateProof = () => {
       return;
     }
     
-    if (!idToken) {
+    if (!isAuthenticated) {
       toast.error('Please sign in to create proofs');
       return;
     }
     
     setLoading(true);
     try {
-      const data = await authenticatedApiCall(
+      const data = await makeAuthenticatedCall(
         API_ENDPOINTS.PROOF.CREATE_TEXT,
         {
           method: 'POST',
           body: JSON.stringify({ text: textContent })
-        },
-        idToken
+        }
       );
 
       if (data.success) {
@@ -91,20 +92,23 @@ const CreateProof = () => {
       return;
     }
 
+    if (!isAuthenticated) {
+      toast.error('Please sign in to create proofs');
+      return;
+    }
+
     setLoading(true);
     try {
-      const token = await user.getIdToken();
       const formData = new FormData();
       formData.append('file', selectedFile);
 
-      const data = await authenticatedApiCall(
+      const data = await makeAuthenticatedCall(
         API_ENDPOINTS.PROOF.CREATE_FILE,
         {
           method: 'POST',
           headers: {}, // Let fetch set Content-Type for FormData
           body: formData
-        },
-        token
+        }
       );
 
       if (data.success) {

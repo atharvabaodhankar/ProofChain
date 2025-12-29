@@ -5,29 +5,30 @@ import { API_ENDPOINTS, authenticatedApiCall } from '../config/api';
 import toast from 'react-hot-toast';
 
 const Dashboard = () => {
-  const { user, getAuthHeaders } = useAuth();
+  const { user, idToken } = useAuth();
   const [blockchainStatus, setBlockchainStatus] = useState(null);
   const [userStats, setUserStats] = useState(null);
   const [recentProofs, setRecentProofs] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (user) {
+    if (user && idToken) {
       fetchBlockchainStatus();
       fetchUserStats();
       fetchRecentActivity();
     } else {
       setLoading(false);
     }
-  }, [user]);
+  }, [user, idToken]);
 
   const fetchBlockchainStatus = async () => {
+    if (!idToken) return;
+    
     try {
-      const token = await user.getIdToken();
       const data = await authenticatedApiCall(
         API_ENDPOINTS.PROOF.STATUS,
         { method: 'GET' },
-        token
+        idToken
       );
       
       if (data.success) {
@@ -42,12 +43,13 @@ const Dashboard = () => {
   };
 
   const fetchUserStats = async () => {
+    if (!idToken) return;
+    
     try {
-      const token = await user.getIdToken();
       const data = await authenticatedApiCall(
         `${API_ENDPOINTS.PROOF.HISTORY}?limit=5`,
         { method: 'GET' },
-        token
+        idToken
       );
       
       if (data.success) {
@@ -65,12 +67,13 @@ const Dashboard = () => {
   };
 
   const fetchRecentActivity = async () => {
+    if (!idToken) return;
+    
     try {
-      const token = await user.getIdToken();
       const data = await authenticatedApiCall(
         `${API_ENDPOINTS.PROOF.HISTORY}?limit=3`,
         { method: 'GET' },
-        token
+        idToken
       );
       
       if (data.success) {

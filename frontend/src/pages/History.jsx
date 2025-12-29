@@ -5,7 +5,7 @@ import { API_ENDPOINTS, apiCall, authenticatedApiCall } from '../config/api';
 import toast from 'react-hot-toast';
 
 const History = () => {
-  const { user, getAuthHeaders } = useAuth();
+  const { user, idToken } = useAuth();
   const [proofs, setProofs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState(null);
@@ -16,15 +16,17 @@ const History = () => {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   useEffect(() => {
-    if (user) {
+    if (user && idToken) {
       fetchUserHistory();
       fetchStats();
     } else {
       setLoading(false);
     }
-  }, [user, sortBy, sortDirection]);
+  }, [user, idToken, sortBy, sortDirection]);
 
   const fetchUserHistory = async () => {
+    if (!idToken) return;
+    
     try {
       setLoading(true);
       const params = new URLSearchParams({
@@ -33,11 +35,10 @@ const History = () => {
         orderDirection: sortDirection
       });
       
-      const token = await user.getIdToken();
       const data = await authenticatedApiCall(
         `${API_ENDPOINTS.PROOF.HISTORY}?${params}`,
         { method: 'GET' },
-        token
+        idToken
       );
       
       if (data.success) {
@@ -90,12 +91,16 @@ const History = () => {
   };
 
   const deleteAllHistory = async () => {
+    if (!idToken) {
+      toast.error('Please sign in to delete history');
+      return;
+    }
+    
     try {
-      const token = await user.getIdToken();
       const data = await authenticatedApiCall(
         API_ENDPOINTS.PROOF.HISTORY,
         { method: 'DELETE' },
-        token
+        idToken
       );
       
       if (data.success) {

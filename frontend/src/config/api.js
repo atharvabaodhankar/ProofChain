@@ -95,19 +95,43 @@ export const apiCall = async (url, options = {}) => {
   }
 };
 
-// Helper function to make authenticated API calls
-export const authenticatedApiCall = async (url, options = {}, token) => {
+// Helper function to make authenticated API calls with automatic token refresh
+export const authenticatedApiCall = async (url, options = {}, token, refreshTokenFn = null) => {
   const isFormData = options.body instanceof FormData;
   
-  return apiCall(url, {
-    ...options,
-    headers: {
-      // Don't set Content-Type for FormData, let browser set it with boundary
-      ...(isFormData ? {} : { 'Content-Type': 'application/json' }),
-      ...options.headers,
-      'Authorization': `Bearer ${token}`,
-    },
-  });
+  try {
+    return await apiCall(url, {
+      ...options,
+      headers: {
+        // Don't set Content-Type for FormData, let browser set it with boundary
+        ...(isFormData ? {} : { 'Content-Type': 'application/json' }),
+        ...options.headers,
+        'Authorization': `Bearer ${token}`,
+      },
+    });
+  } catch (error) {
+    // If we get a 401 and have a refresh function, try to refresh the token
+    if (error.message.includes('401') && refreshTokenFn) {
+      console.log('🔄 Token expired, attempting refresh...');
+      try {
+        const newToken = await refreshTokenFn();
+        if (newToken) {
+          console.log('✅ Token refreshed, retrying API call...');
+          return await apiCall(url, {
+            ...options,
+            headers: {
+              ...(isFormData ? {} : { 'Content-Type': 'application/json' }),
+              ...options.headers,
+              'Authorization': `Bearer ${newToken}`,
+            },
+          });
+        }
+      } catch (refreshError) {
+        console.error('❌ Token refresh failed:', refreshError);
+      }
+    }
+    throw error;
+  }
 };
 
 export default API_BASE_URL;
