@@ -5,7 +5,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { API_ENDPOINTS, authenticatedApiCall } from '../config/api';
 
 const CreateProof = () => {
-  const { user, login, getAuthHeaders } = useAuth();
+  const { user, login, idToken } = useAuth();
   const [activeTab, setActiveTab] = useState('text');
   const [textContent, setTextContent] = useState('');
   const [selectedFile, setSelectedFile] = useState(null);
