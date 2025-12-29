@@ -51,14 +51,13 @@ const corsOptions = {
     
     const allowedOrigins = process.env.NODE_ENV === 'production' 
       ? [
+          'https://proof-chain-app.vercel.app', // Your actual frontend domain
           'https://proof-of-existence.vercel.app',
           'https://proof-of-existence.netlify.app',
           'https://proofchain.vercel.app',
           'https://proofchain.netlify.app',
           'https://proof-chain.vercel.app',
-          'https://proof-chain.netlify.app',
-          // Add your actual frontend domain here
-          'https://your-frontend-domain.com'
+          'https://proof-chain.netlify.app'
         ]
       : [
           'http://localhost:3000',
@@ -67,7 +66,8 @@ const corsOptions = {
           'http://127.0.0.1:5173',
           'http://localhost:4173', // Vite preview
           // Also allow production URL in development for testing
-          'https://proof-of-existence.onrender.com'
+          'https://proof-of-existence.onrender.com',
+          'https://proof-chain-app.vercel.app' // Allow production frontend in dev for testing
         ];
     
     if (allowedOrigins.indexOf(origin) !== -1) {
