@@ -54,16 +54,21 @@ const CreateProof = () => {
       toast.error('Please enter some text content');
       return;
     }
+    
+    if (!idToken) {
+      toast.error('Please sign in to create proofs');
+      return;
+    }
+    
     setLoading(true);
     try {
-      const token = await user.getIdToken();
       const data = await authenticatedApiCall(
         API_ENDPOINTS.PROOF.CREATE_TEXT,
         {
           method: 'POST',
           body: JSON.stringify({ text: textContent })
         },
-        token
+        idToken
       );
 
       if (data.success) {
