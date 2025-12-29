@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Shield, Clock, Hash, ExternalLink, User } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import { API_ENDPOINTS, authenticatedApiCall } from '../config/api';
 import toast from 'react-hot-toast';
 
 const Dashboard = () => {
@@ -22,10 +23,12 @@ const Dashboard = () => {
 
   const fetchBlockchainStatus = async () => {
     try {
-      const response = await fetch('/api/proof/status', {
-        headers: getAuthHeaders()
-      });
-      const data = await response.json();
+      const token = await user.getIdToken();
+      const data = await authenticatedApiCall(
+        API_ENDPOINTS.PROOF.STATUS,
+        { method: 'GET' },
+        token
+      );
       
       if (data.success) {
         setBlockchainStatus(data.blockchain);
@@ -40,10 +43,12 @@ const Dashboard = () => {
 
   const fetchUserStats = async () => {
     try {
-      const response = await fetch('/api/proof/history?limit=5', {
-        headers: getAuthHeaders()
-      });
-      const data = await response.json();
+      const token = await user.getIdToken();
+      const data = await authenticatedApiCall(
+        `${API_ENDPOINTS.PROOF.HISTORY}?limit=5`,
+        { method: 'GET' },
+        token
+      );
       
       if (data.success) {
         const proofs = data.proofs;
@@ -61,10 +66,12 @@ const Dashboard = () => {
 
   const fetchRecentActivity = async () => {
     try {
-      const response = await fetch('/api/proof/history?limit=3', {
-        headers: getAuthHeaders()
-      });
-      const data = await response.json();
+      const token = await user.getIdToken();
+      const data = await authenticatedApiCall(
+        `${API_ENDPOINTS.PROOF.HISTORY}?limit=3`,
+        { method: 'GET' },
+        token
+      );
       
       if (data.success) {
         setRecentProofs(data.proofs);

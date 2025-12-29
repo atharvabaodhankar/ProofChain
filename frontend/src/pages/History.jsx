@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Clock, FileText, Shield, ExternalLink, Hash, Calendar, User, Search, Trash2, Download, Filter } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import { API_ENDPOINTS, apiCall, authenticatedApiCall } from '../config/api';
 import toast from 'react-hot-toast';
 
 const History = () => {
@@ -32,10 +33,12 @@ const History = () => {
         orderDirection: sortDirection
       });
       
-      const response = await fetch(`/api/proof/history?${params}`, {
-        headers: getAuthHeaders()
-      });
-      const data = await response.json();
+      const token = await user.getIdToken();
+      const data = await authenticatedApiCall(
+        `${API_ENDPOINTS.PROOF.HISTORY}?${params}`,
+        { method: 'GET' },
+        token
+      );
       
       if (data.success) {
         setProofs(data.proofs);
@@ -52,8 +55,7 @@ const History = () => {
 
   const fetchStats = async () => {
     try {
-      const response = await fetch('/api/proof/stats');
-      const data = await response.json();
+      const data = await apiCall(API_ENDPOINTS.PROOF.STATS);
       
       if (data.success) {
         setStats(data.stats);
@@ -89,12 +91,13 @@ const History = () => {
 
   const deleteAllHistory = async () => {
     try {
-      const response = await fetch('/api/proof/history', {
-        method: 'DELETE',
-        headers: getAuthHeaders()
-      });
+      const token = await user.getIdToken();
+      const data = await authenticatedApiCall(
+        API_ENDPOINTS.PROOF.HISTORY,
+        { method: 'DELETE' },
+        token
+      );
       
-      const data = await response.json();
       if (data.success) {
         setProofs([]);
         setShowDeleteConfirm(false);

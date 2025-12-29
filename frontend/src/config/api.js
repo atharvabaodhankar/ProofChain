@@ -24,8 +24,10 @@ export const API_ENDPOINTS = {
     CREATE_FILE: `${API_BASE_URL}/proof/file`,
     VERIFY_TEXT: `${API_BASE_URL}/proof/verify/text`,
     VERIFY_FILE: `${API_BASE_URL}/proof/verify/file`,
+    VERIFY_HASH: `${API_BASE_URL}/proof/hash`, // Base URL for hash verification
     HISTORY: `${API_BASE_URL}/proof/history`,
     STATS: `${API_BASE_URL}/proof/stats`,
+    STATUS: `${API_BASE_URL}/proof/status`,
   }
 };
 
@@ -40,11 +42,15 @@ export const DEFAULT_FETCH_OPTIONS = {
 // Helper function to make API calls with proper error handling
 export const apiCall = async (url, options = {}) => {
   try {
+    const isFormData = options.body instanceof FormData;
+    
     const response = await fetch(url, {
       ...DEFAULT_FETCH_OPTIONS,
       ...options,
       headers: {
         ...DEFAULT_FETCH_OPTIONS.headers,
+        // Don't set Content-Type for FormData, let browser set it with boundary
+        ...(isFormData ? {} : { 'Content-Type': 'application/json' }),
         ...options.headers,
       },
     });

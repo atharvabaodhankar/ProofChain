@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { FileText, Upload, Search, CheckCircle, XCircle, Clock, ExternalLink } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { API_ENDPOINTS, apiCall } from '../config/api';
 
 const VerifyProof = () => {
   const [activeTab, setActiveTab] = useState('text');
@@ -55,15 +56,11 @@ const VerifyProof = () => {
 
     setLoading(true);
     try {
-      const response = await fetch('/api/proof/verify/text', {
+      const data = await apiCall(API_ENDPOINTS.PROOF.VERIFY_TEXT, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
         body: JSON.stringify({ text: textContent })
       });
 
-      const data = await response.json();
       if (data.success) {
         setVerification(data);
         if (data.verified) {
@@ -93,12 +90,11 @@ const VerifyProof = () => {
       const formData = new FormData();
       formData.append('file', selectedFile);
 
-      const response = await fetch('/api/proof/verify/file', {
+      const data = await apiCall(API_ENDPOINTS.PROOF.VERIFY_FILE, {
         method: 'POST',
+        headers: {}, // Let fetch set Content-Type for FormData
         body: formData
       });
-
-      const data = await response.json();
 
       if (data.success) {
         setVerification(data);
@@ -131,8 +127,7 @@ const VerifyProof = () => {
 
     setLoading(true);
     try {
-      const response = await fetch(`/api/proof/hash/${hashInput}`);
-      const data = await response.json();
+      const data = await apiCall(`${API_ENDPOINTS.PROOF.VERIFY_HASH}/${hashInput}`);
 
       if (data.success) {
         setVerification({
