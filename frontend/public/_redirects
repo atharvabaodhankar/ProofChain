@@ -1,0 +1,5 @@
+# SPA fallback for client-side routing
+/*    /index.html   200
+
+# API redirects (if needed)
+/api/*  https://proof-of-existence.onrender.com/api/:splat  200
