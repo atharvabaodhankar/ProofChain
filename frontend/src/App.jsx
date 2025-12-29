@@ -3,6 +3,7 @@ import { Routes, Route, useLocation } from 'react-router-dom';
 import { AnimatePresence } from 'framer-motion';
 import Navbar from './components/Navbar';
 import PageTransition from './components/PageTransition';
+import CorsTest from './components/CorsTest';
 import Home from './pages/Home';
 import CreateProof from './pages/CreateProof';
 import VerifyProof from './pages/VerifyProof';
@@ -69,6 +70,9 @@ function App() {
           </Routes>
         </AnimatePresence>
       </main>
+      
+      {/* CORS Test Component (Development Only) */}
+      {import.meta.env.DEV && <CorsTest />}
     </div>
   );
 }

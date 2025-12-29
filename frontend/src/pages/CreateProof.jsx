@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { ExternalLink, AlertCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useAuth } from '../contexts/AuthContext';
+import { API_ENDPOINTS, authenticatedApiCall } from '../config/api';
 
 const CreateProof = () => {
   const { user, login, getAuthHeaders } = useAuth();
@@ -55,16 +56,15 @@ const CreateProof = () => {
     }
     setLoading(true);
     try {
-      const response = await fetch('/api/proof/text', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...getAuthHeaders()
+      const token = await user.getIdToken();
+      const data = await authenticatedApiCall(
+        API_ENDPOINTS.PROOF.CREATE_TEXT,
+        {
+          method: 'POST',
+          body: JSON.stringify({ text: textContent })
         },
-        body: JSON.stringify({ text: textContent })
-      });
-
-      const data = await response.json();
+        token
+      );
 
       if (data.success) {
         setProof(data.proof);
@@ -88,16 +88,19 @@ const CreateProof = () => {
 
     setLoading(true);
     try {
+      const token = await user.getIdToken();
       const formData = new FormData();
       formData.append('file', selectedFile);
 
-      const response = await fetch('/api/proof/file', {
-        method: 'POST',
-        headers: getAuthHeaders(),
-        body: formData
-      });
-
-      const data = await response.json();
+      const data = await authenticatedApiCall(
+        API_ENDPOINTS.PROOF.CREATE_FILE,
+        {
+          method: 'POST',
+          headers: {}, // Let fetch set Content-Type for FormData
+          body: formData
+        },
+        token
+      );
 
       if (data.success) {
         setProof(data.proof);
