@@ -9,8 +9,11 @@ export default defineConfig({
     host: true, // Allow external connections
     cors: true, // Enable CORS
     proxy: {
+      // Only proxy API calls when using local backend
       '/api': {
-        target: 'http://localhost:3001',
+        target: process.env.VITE_API_URL?.includes('localhost') 
+          ? 'http://localhost:3001' 
+          : false, // Disable proxy for production backend
         changeOrigin: true,
         secure: false,
         ws: true, // Enable websocket proxying

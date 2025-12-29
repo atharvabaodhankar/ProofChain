@@ -1,6 +1,10 @@
 // API Configuration
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
 
+// Log which backend is being used
+console.log('🔗 API Backend:', API_BASE_URL);
+console.log('🌍 Environment:', import.meta.env.MODE);
+
 // API endpoints
 export const API_ENDPOINTS = {
   // Test endpoints
