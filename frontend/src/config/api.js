@@ -6,7 +6,7 @@ const isLocalhost = window.location.hostname === 'localhost' || window.location.
 // In production, use the full backend URL
 const API_BASE_URL = isDevelopment && isLocalhost 
   ? '/api'  // Use relative URL for Vite proxy in development
-  : import.meta.env.VITE_API_URL || 'https://proof-of-existence.onrender.com/api';
+  : import.meta.env.VITE_API_URL || 'https://proofchain-c7ca.onrender.com/api';
 
 // Log which backend is being used
 console.log('🔗 API Backend:', API_BASE_URL);
