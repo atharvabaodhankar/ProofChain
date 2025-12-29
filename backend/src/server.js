@@ -49,32 +49,34 @@ const corsOptions = {
     // Allow requests with no origin (like mobile apps or curl requests)
     if (!origin) return callback(null, true);
     
-    const allowedOrigins = process.env.NODE_ENV === 'production' 
-      ? [
-          'https://proof-chain-app.vercel.app', // Your actual frontend domain
-          'https://proof-of-existence.vercel.app',
-          'https://proof-of-existence.netlify.app',
-          'https://proofchain.vercel.app',
-          'https://proofchain.netlify.app',
-          'https://proof-chain.vercel.app',
-          'https://proof-chain.netlify.app'
-        ]
-      : [
-          'http://localhost:3000',
-          'http://localhost:5173',
-          'http://127.0.0.1:3000',
-          'http://127.0.0.1:5173',
-          'http://localhost:4173', // Vite preview
-          // Also allow production URL in development for testing
-          'https://proof-of-existence.onrender.com',
-          'https://proof-chain-app.vercel.app' // Allow production frontend in dev for testing
-        ];
+    const allowedOrigins = [
+      // Production domains
+      'https://proof-chain-app.vercel.app', // Your actual frontend domain
+      'https://proof-of-existence.vercel.app',
+      'https://proof-of-existence.netlify.app',
+      'https://proofchain.vercel.app',
+      'https://proofchain.netlify.app',
+      'https://proof-chain.vercel.app',
+      'https://proof-chain.netlify.app',
+      // Development domains
+      'http://localhost:3000',
+      'http://localhost:5173',
+      'http://127.0.0.1:3000',
+      'http://127.0.0.1:5173',
+      'http://localhost:4173', // Vite preview
+      // Backend URL (for testing)
+      'https://proof-of-existence.onrender.com'
+    ];
+    
+    console.log('🌐 CORS Check - Origin:', origin);
+    console.log('🔍 Allowed Origins:', allowedOrigins);
     
     if (allowedOrigins.indexOf(origin) !== -1) {
+      console.log('✅ CORS allowed for origin:', origin);
       callback(null, true);
     } else {
-      console.log('CORS blocked origin:', origin);
-      callback(new Error('Not allowed by CORS'));
+      console.log('❌ CORS blocked origin:', origin);
+      callback(new Error(`Not allowed by CORS. Origin: ${origin}`));
     }
   },
   credentials: true,

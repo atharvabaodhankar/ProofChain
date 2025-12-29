@@ -9,11 +9,9 @@ export default defineConfig({
     host: true, // Allow external connections
     cors: true, // Enable CORS
     proxy: {
-      // Only proxy API calls when using local backend
+      // Only proxy API calls when using local backend in development
       '/api': {
-        target: process.env.VITE_API_URL?.includes('localhost') 
-          ? 'http://localhost:3001' 
-          : false, // Disable proxy for production backend
+        target: 'http://localhost:3001',
         changeOrigin: true,
         secure: false,
         ws: true, // Enable websocket proxying
@@ -21,7 +19,7 @@ export default defineConfig({
           proxy.on('error', (err, _req, _res) => {
             console.log('proxy error', err);
           });
-          proxy.on('proxyReq', (proxyReq, req, _res) => {
+          proxy.on('proxyReq', (_proxyReq, req, _res) => {
             console.log('Sending Request to the Target:', req.method, req.url);
           });
           proxy.on('proxyRes', (proxyRes, req, _res) => {

@@ -1,9 +1,19 @@
 // API Configuration
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
+const isDevelopment = import.meta.env.MODE === 'development';
+const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+
+// In development, use relative URLs (Vite proxy will handle them)
+// In production, use the full backend URL
+const API_BASE_URL = isDevelopment && isLocalhost 
+  ? '/api'  // Use relative URL for Vite proxy in development
+  : import.meta.env.VITE_API_URL || 'https://proof-of-existence.onrender.com/api';
 
 // Log which backend is being used
 console.log('🔗 API Backend:', API_BASE_URL);
 console.log('🌍 Environment:', import.meta.env.MODE);
+console.log('🏠 Hostname:', window.location.hostname);
+console.log('🔧 Is Development:', isDevelopment);
+console.log('🏠 Is Localhost:', isLocalhost);
 
 // API endpoints
 export const API_ENDPOINTS = {
@@ -42,6 +52,9 @@ export const DEFAULT_FETCH_OPTIONS = {
 // Helper function to make API calls with proper error handling
 export const apiCall = async (url, options = {}) => {
   try {
+    console.log('🚀 Making API call to:', url);
+    console.log('📋 Options:', options);
+    
     const isFormData = options.body instanceof FormData;
     
     const response = await fetch(url, {
@@ -55,13 +68,19 @@ export const apiCall = async (url, options = {}) => {
       },
     });
 
+    console.log('📡 Response status:', response.status);
+    console.log('📡 Response headers:', Object.fromEntries(response.headers.entries()));
+
     // Handle non-JSON responses
     const contentType = response.headers.get('content-type');
     if (!contentType || !contentType.includes('application/json')) {
-      throw new Error(`Server returned ${response.status}: ${response.statusText}`);
+      const text = await response.text();
+      console.error('❌ Non-JSON response:', text);
+      throw new Error(`Server returned ${response.status}: ${response.statusText}. Response: ${text.substring(0, 200)}`);
     }
 
     const data = await response.json();
+    console.log('📦 Response data:', data);
 
     if (!response.ok) {
       throw new Error(data.error || data.message || `HTTP ${response.status}`);
@@ -69,7 +88,9 @@ export const apiCall = async (url, options = {}) => {
 
     return data;
   } catch (error) {
-    console.error('API call failed:', error);
+    console.error('❌ API call failed:', error);
+    console.error('🔗 URL:', url);
+    console.error('📋 Options:', options);
     throw error;
   }
 };
