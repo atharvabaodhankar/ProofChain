@@ -67,15 +67,15 @@ const CreateProof = () => {
     
     setLoading(true);
     setShowTimeline(true);
-    setCurrentBackendStep(1); // Start with step 1: Computing Hash
+    setCurrentBackendStep(1); // Computing Hash
     
     try {
-      // Simulate backend progress steps
-      setTimeout(() => setCurrentBackendStep(2), 500);   // Preparing Transaction
-      setTimeout(() => setCurrentBackendStep(3), 1000);  // Signing Transaction
-      setTimeout(() => setCurrentBackendStep(4), 1500);  // Broadcasting to Network
-      setTimeout(() => setCurrentBackendStep(5), 2000);  // Waiting for Confirmation
+      setCurrentBackendStep(2); // Preparing Transaction
+      setCurrentBackendStep(3); // Signing Transaction
+      setCurrentBackendStep(4); // Broadcasting to Network
+      setCurrentBackendStep(5); // Waiting for Confirmation - this is where the real wait happens
       
+      // Make the actual API call - this is where the real blockchain work happens
       const data = await makeAuthenticatedCall(
         API_ENDPOINTS.PROOF.CREATE_TEXT,
         {
@@ -85,7 +85,7 @@ const CreateProof = () => {
       );
 
       if (data.success) {
-        setCurrentBackendStep(6); // Block Confirmation
+        setCurrentBackendStep(6); // Block Confirmation - only after API succeeds
         setTimeout(() => {
           setCurrentBackendStep(7); // Storing Metadata
           setTimeout(() => {
@@ -93,8 +93,8 @@ const CreateProof = () => {
             toast.success('Proof created successfully!');
             setShowTimeline(false);
             setCurrentBackendStep(0);
-          }, 800);
-        }, 500);
+          }, 500);
+        }, 300);
       } else {
         setShowTimeline(false);
         setCurrentBackendStep(0);
@@ -123,18 +123,18 @@ const CreateProof = () => {
 
     setLoading(true);
     setShowTimeline(true);
-    setCurrentBackendStep(1); // Start with step 1: Computing Hash
+    setCurrentBackendStep(1); // Computing Hash
     
     try {
-      // Simulate backend progress steps
-      setTimeout(() => setCurrentBackendStep(2), 500);   // Preparing Transaction
-      setTimeout(() => setCurrentBackendStep(3), 1000);  // Signing Transaction
-      setTimeout(() => setCurrentBackendStep(4), 1500);  // Broadcasting to Network
-      setTimeout(() => setCurrentBackendStep(5), 2000);  // Waiting for Confirmation
+      setCurrentBackendStep(2); // Preparing Transaction
+      setCurrentBackendStep(3); // Signing Transaction
+      setCurrentBackendStep(4); // Broadcasting to Network
+      setCurrentBackendStep(5); // Waiting for Confirmation - this is where the real wait happens
 
       const formData = new FormData();
       formData.append('file', selectedFile);
 
+      // Make the actual API call - this is where the real blockchain work happens
       const data = await makeAuthenticatedCall(
         API_ENDPOINTS.PROOF.CREATE_FILE,
         {
@@ -145,7 +145,7 @@ const CreateProof = () => {
       );
 
       if (data.success) {
-        setCurrentBackendStep(6); // Block Confirmation
+        setCurrentBackendStep(6); // Block Confirmation - only after API succeeds
         setTimeout(() => {
           setCurrentBackendStep(7); // Storing Metadata
           setTimeout(() => {
@@ -153,8 +153,8 @@ const CreateProof = () => {
             toast.success('Proof created successfully!');
             setShowTimeline(false);
             setCurrentBackendStep(0);
-          }, 800);
-        }, 500);
+          }, 500);
+        }, 300);
       } else {
         setShowTimeline(false);
         setCurrentBackendStep(0);
