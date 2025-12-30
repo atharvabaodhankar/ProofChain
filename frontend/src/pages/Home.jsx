@@ -4,36 +4,34 @@ import AnimatedLink from '../components/AnimatedLink';
 import { API_ENDPOINTS, apiCall } from '../config/api';
 
 const Home = () => {
-  const [serverStatus, setServerStatus] = useState('checking'); // 'checking', 'online', 'offline'
-
   useEffect(() => {
-    // Wake up the server when homepage loads
+    // Silent server wake-up call for Render cold start
     const wakeUpServer = async () => {
       try {
-        console.log('🚀 Waking up server...');
-        setServerStatus('checking');
-        
-        const response = await apiCall(API_ENDPOINTS.HEALTH, {
+        console.log('🚀 Waking up server silently...');
+        await apiCall(API_ENDPOINTS.HEALTH, {
           method: 'GET',
-          // Add timeout for health check
           signal: AbortSignal.timeout(10000) // 10 second timeout
         });
-        
-        console.log('✅ Server is awake:', response);
-        setServerStatus('online');
+        console.log('✅ Server is awake');
       } catch (error) {
         console.error('❌ Server health check failed:', error);
-        setServerStatus('offline');
-        
-        // Try again after 5 seconds if failed (server might be cold starting)
-        setTimeout(() => {
-          console.log('🔄 Retrying server health check...');
-          wakeUpServer();
+        // Retry once after 5 seconds for cold starts
+        setTimeout(async () => {
+          try {
+            await apiCall(API_ENDPOINTS.HEALTH, {
+              method: 'GET',
+              signal: AbortSignal.timeout(10000)
+            });
+            console.log('✅ Server is awake (retry)');
+          } catch (retryError) {
+            console.error('❌ Server health check retry failed:', retryError);
+          }
         }, 5000);
       }
     };
 
-    // Start the health check
+    // Start silent health check
     wakeUpServer();
   }, []);
 
@@ -81,14 +79,8 @@ const Home = () => {
       {/* Hero Section */}
       <div className="text-center max-w-4xl mx-auto mb-12 lg:mb-20">
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-300 text-xs font-medium tracking-wide mb-4 lg:mb-6">
-          <span className={`w-1.5 h-1.5 rounded-full ${
-            serverStatus === 'online' ? 'bg-green-400 animate-pulse' : 
-            serverStatus === 'checking' ? 'bg-yellow-400 animate-pulse' : 
-            'bg-red-400 animate-pulse'
-          }`}></span>
-          {serverStatus === 'online' ? 'Decentralized Notary Service' :
-           serverStatus === 'checking' ? 'Starting Server...' :
-           'Server Offline - Retrying...'}
+          <span className="w-1.5 h-1.5 rounded-full bg-indigo-400 animate-pulse"></span>
+          Decentralized Notary Service
         </div>
         
         <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-7xl font-bold tracking-tight text-white mb-4 lg:mb-6">
