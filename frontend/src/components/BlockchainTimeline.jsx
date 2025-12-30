@@ -57,6 +57,7 @@ const BlockchainTimeline = ({ isActive, onComplete, currentBackendStep }) => {
     // Update completed steps based on backend progress
     if (currentBackendStep > 0) {
       const newCompletedSteps = [];
+      // Mark all previous steps as completed
       for (let i = 0; i < currentBackendStep - 1; i++) {
         newCompletedSteps.push(i);
       }
@@ -168,7 +169,5 @@ const BlockchainTimeline = ({ isActive, onComplete, currentBackendStep }) => {
     </div>
   );
 };
-
-export default BlockchainTimeline;
 
 export default BlockchainTimeline;
