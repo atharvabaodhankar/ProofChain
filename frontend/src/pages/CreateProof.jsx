@@ -16,6 +16,8 @@ const CreateProof = () => {
   const [showTimeline, setShowTimeline] = useState(false);
   const [currentBackendStep, setCurrentBackendStep] = useState(0);
   const [proof, setProof] = useState(null);
+  const [existingProof, setExistingProof] = useState(null);
+  const [showExistingProofModal, setShowExistingProofModal] = useState(false);
   const [dragActive, setDragActive] = useState(false);
 
   const handleFileSelect = (event) => {
@@ -111,7 +113,33 @@ const CreateProof = () => {
       console.error('Error creating text proof:', error);
       setShowTimeline(false);
       setCurrentBackendStep(0);
-      toast.error('Failed to create proof. Please try again.');
+      
+      // Check if it's a conflict error (proof already exists)
+      if (error.message === 'Conflict') {
+        // Try to get the existing proof by verifying the text
+        try {
+          const verifyData = await makeAuthenticatedCall(
+            API_ENDPOINTS.PROOF.VERIFY_TEXT,
+            {
+              method: 'POST',
+              body: JSON.stringify({ text: textContent })
+            }
+          );
+          
+          if (verifyData.success && verifyData.verified) {
+            setExistingProof(verifyData.proof);
+            setShowExistingProofModal(true);
+            toast.success('Proof already exists! Showing existing proof.');
+          } else {
+            toast.error('A proof for this content already exists, but could not retrieve details.');
+          }
+        } catch (verifyError) {
+          console.error('Error verifying existing proof:', verifyError);
+          toast.error('A proof for this content already exists, but could not retrieve details.');
+        }
+      } else {
+        toast.error('Failed to create proof. Please try again.');
+      }
     } finally {
       setLoading(false);
     }
@@ -178,7 +206,37 @@ const CreateProof = () => {
       console.error('Error creating file proof:', error);
       setShowTimeline(false);
       setCurrentBackendStep(0);
-      toast.error('Failed to create proof. Please try again.');
+      
+      // Check if it's a conflict error (proof already exists)
+      if (error.message === 'Conflict') {
+        // Try to get the existing proof by verifying the file
+        try {
+          const formData = new FormData();
+          formData.append('file', selectedFile);
+          
+          const verifyData = await makeAuthenticatedCall(
+            API_ENDPOINTS.PROOF.VERIFY_FILE,
+            {
+              method: 'POST',
+              headers: {}, // Let fetch set Content-Type for FormData
+              body: formData
+            }
+          );
+          
+          if (verifyData.success && verifyData.verified) {
+            setExistingProof(verifyData.proof);
+            setShowExistingProofModal(true);
+            toast.success('Proof already exists! Showing existing proof.');
+          } else {
+            toast.error('A proof for this file already exists, but could not retrieve details.');
+          }
+        } catch (verifyError) {
+          console.error('Error verifying existing proof:', verifyError);
+          toast.error('A proof for this file already exists, but could not retrieve details.');
+        }
+      } else {
+        toast.error('Failed to create proof. Please try again.');
+      }
     } finally {
       setLoading(false);
     }
@@ -203,6 +261,101 @@ const CreateProof = () => {
   };
   return (
     <>
+      {/* Existing Proof Modal */}
+      {showExistingProofModal && existingProof && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="relative bg-slate-900/90 backdrop-blur-xl border border-amber-500/20 rounded-2xl p-6 sm:p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            {/* Header */}
+            <div className="text-center mb-6">
+              <div className="w-12 h-12 mx-auto mb-4 bg-gradient-to-r from-amber-600 to-orange-600 rounded-full flex items-center justify-center">
+                <span className="material-symbols-outlined text-white text-xl">info</span>
+              </div>
+              <h2 className="text-xl font-bold text-white mb-2">Proof Already Exists</h2>
+              <p className="text-sm text-slate-400">This content was already timestamped on the blockchain</p>
+            </div>
+
+            {/* Existing Proof Details */}
+            <div className="bg-slate-950/50 rounded-xl p-4 sm:p-6 space-y-4 text-left mb-6">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                <div>
+                  <label className="text-xs text-slate-500 uppercase tracking-wider font-semibold">Hash</label>
+                  <div className="flex items-center gap-2 mt-1">
+                    <code className="text-xs sm:text-sm font-mono text-slate-200 break-all flex-1">{existingProof.hash}</code>
+                    <button
+                      onClick={() => copyToClipboard(existingProof.hash)}
+                      className="p-1 rounded hover:bg-white/10 text-slate-500 hover:text-slate-300 transition-colors flex-shrink-0"
+                    >
+                      <span className="material-symbols-outlined text-[14px] sm:text-[16px]">content_copy</span>
+                    </button>
+                  </div>
+                </div>
+                
+                <div>
+                  <label className="text-xs text-slate-500 uppercase tracking-wider font-semibold">Transaction</label>
+                  <div className="flex items-center gap-2 mt-1">
+                    <code className="text-xs sm:text-sm font-mono text-slate-200 break-all flex-1">{existingProof.transactionHash}</code>
+                    <button
+                      onClick={() => copyToClipboard(existingProof.transactionHash)}
+                      className="p-1 rounded hover:bg-white/10 text-slate-500 hover:text-slate-300 transition-colors flex-shrink-0"
+                    >
+                      <span className="material-symbols-outlined text-[14px] sm:text-[16px]">content_copy</span>
+                    </button>
+                  </div>
+                </div>
+                
+                <div>
+                  <label className="text-xs text-slate-500 uppercase tracking-wider font-semibold">Original Creator</label>
+                  <div className="flex items-center gap-2 mt-1">
+                    <div className="flex-1">
+                      <p className="text-xs sm:text-sm text-slate-200 font-medium">
+                        {existingProof.creatorName || 'Unknown'}
+                      </p>
+                      <p className="text-xs text-slate-400">Proof Owner</p>
+                    </div>
+                  </div>
+                </div>
+                
+                <div>
+                  <label className="text-xs text-slate-500 uppercase tracking-wider font-semibold">Block Number</label>
+                  <p className="text-xs sm:text-sm font-mono text-slate-200 mt-1">{existingProof.blockNumber}</p>
+                </div>
+                
+                <div className="lg:col-span-2">
+                  <label className="text-xs text-slate-500 uppercase tracking-wider font-semibold">Original Timestamp</label>
+                  <p className="text-xs sm:text-sm font-mono text-slate-200 mt-1">
+                    {new Date(existingProof.timestamp * 1000).toLocaleString()}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Actions */}
+            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
+              <button
+                onClick={() => {
+                  setShowExistingProofModal(false);
+                  setExistingProof(null);
+                }}
+                className="flex-1 bg-white/5 hover:bg-white/10 text-white border border-white/10 py-3 px-6 rounded-xl font-medium transition-all text-sm sm:text-base"
+              >
+                Close
+              </button>
+              <button
+                onClick={() => {
+                  setShowExistingProofModal(false);
+                  setExistingProof(null);
+                  setTextContent('');
+                  setSelectedFile(null);
+                }}
+                className="flex-1 bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 text-white shadow-lg shadow-amber-500/25 py-3 px-6 rounded-xl font-medium transition-all text-sm sm:text-base"
+              >
+                Try Different Content
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Blockchain Timeline Modal */}
       <BlockchainTimeline 
         isActive={showTimeline} 
