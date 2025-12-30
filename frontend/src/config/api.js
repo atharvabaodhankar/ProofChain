@@ -17,6 +17,9 @@ console.log('🏠 Is Localhost:', isLocalhost);
 
 // API endpoints
 export const API_ENDPOINTS = {
+  // Health endpoint (note: not under /api prefix)
+  HEALTH: `${API_BASE_URL.replace('/api', '')}/health`,
+  
   // Auth endpoints
   AUTH: {
     VERIFY_TOKEN: `${API_BASE_URL}/auth/verify`,
