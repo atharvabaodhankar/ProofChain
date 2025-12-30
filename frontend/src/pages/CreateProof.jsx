@@ -14,6 +14,7 @@ const CreateProof = () => {
   const [selectedFile, setSelectedFile] = useState(null);
   const [loading, setLoading] = useState(false);
   const [showTimeline, setShowTimeline] = useState(false);
+  const [currentBackendStep, setCurrentBackendStep] = useState(0);
   const [proof, setProof] = useState(null);
   const [dragActive, setDragActive] = useState(false);
 
@@ -66,8 +67,15 @@ const CreateProof = () => {
     
     setLoading(true);
     setShowTimeline(true);
+    setCurrentBackendStep(1); // Start with step 1: Computing Hash
     
     try {
+      // Simulate backend progress steps
+      setTimeout(() => setCurrentBackendStep(2), 500);   // Preparing Transaction
+      setTimeout(() => setCurrentBackendStep(3), 1000);  // Signing Transaction
+      setTimeout(() => setCurrentBackendStep(4), 1500);  // Broadcasting to Network
+      setTimeout(() => setCurrentBackendStep(5), 2000);  // Waiting for Confirmation
+      
       const data = await makeAuthenticatedCall(
         API_ENDPOINTS.PROOF.CREATE_TEXT,
         {
@@ -77,19 +85,25 @@ const CreateProof = () => {
       );
 
       if (data.success) {
-        // Timeline will complete automatically, then show success
+        setCurrentBackendStep(6); // Block Confirmation
         setTimeout(() => {
-          setProof(data.proof);
-          toast.success('Proof created successfully!');
-          setShowTimeline(false);
+          setCurrentBackendStep(7); // Storing Metadata
+          setTimeout(() => {
+            setProof(data.proof);
+            toast.success('Proof created successfully!');
+            setShowTimeline(false);
+            setCurrentBackendStep(0);
+          }, 800);
         }, 500);
       } else {
         setShowTimeline(false);
+        setCurrentBackendStep(0);
         toast.error(data.message || 'Failed to create proof');
       }
     } catch (error) {
       console.error('Error creating text proof:', error);
       setShowTimeline(false);
+      setCurrentBackendStep(0);
       toast.error('Failed to create proof. Please try again.');
     } finally {
       setLoading(false);
@@ -109,8 +123,15 @@ const CreateProof = () => {
 
     setLoading(true);
     setShowTimeline(true);
+    setCurrentBackendStep(1); // Start with step 1: Computing Hash
     
     try {
+      // Simulate backend progress steps
+      setTimeout(() => setCurrentBackendStep(2), 500);   // Preparing Transaction
+      setTimeout(() => setCurrentBackendStep(3), 1000);  // Signing Transaction
+      setTimeout(() => setCurrentBackendStep(4), 1500);  // Broadcasting to Network
+      setTimeout(() => setCurrentBackendStep(5), 2000);  // Waiting for Confirmation
+
       const formData = new FormData();
       formData.append('file', selectedFile);
 
@@ -124,19 +145,25 @@ const CreateProof = () => {
       );
 
       if (data.success) {
-        // Timeline will complete automatically, then show success
+        setCurrentBackendStep(6); // Block Confirmation
         setTimeout(() => {
-          setProof(data.proof);
-          toast.success('Proof created successfully!');
-          setShowTimeline(false);
+          setCurrentBackendStep(7); // Storing Metadata
+          setTimeout(() => {
+            setProof(data.proof);
+            toast.success('Proof created successfully!');
+            setShowTimeline(false);
+            setCurrentBackendStep(0);
+          }, 800);
         }, 500);
       } else {
         setShowTimeline(false);
+        setCurrentBackendStep(0);
         toast.error(data.message || 'Failed to create proof');
       }
     } catch (error) {
       console.error('Error creating file proof:', error);
       setShowTimeline(false);
+      setCurrentBackendStep(0);
       toast.error('Failed to create proof. Please try again.');
     } finally {
       setLoading(false);
@@ -166,6 +193,7 @@ const CreateProof = () => {
       <BlockchainTimeline 
         isActive={showTimeline} 
         onComplete={handleTimelineComplete}
+        currentBackendStep={currentBackendStep}
       />
       
       <div className="relative z-10 pt-24 lg:pt-32 pb-12 lg:pb-20 px-4 sm:px-6 max-w-7xl mx-auto flex flex-col items-center">
