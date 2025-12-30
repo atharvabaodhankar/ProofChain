@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 
-const BlockchainTimeline = ({ isActive, onComplete }) => {
-  const [currentStep, setCurrentStep] = useState(0);
+const BlockchainTimeline = ({ isActive, onComplete, currentBackendStep }) => {
   const [completedSteps, setCompletedSteps] = useState([]);
 
   const steps = [
@@ -9,88 +8,61 @@ const BlockchainTimeline = ({ isActive, onComplete }) => {
       id: 1,
       title: "Computing Hash",
       description: "Generating SHA-256 cryptographic fingerprint",
-      icon: "fingerprint",
-      duration: 1500
+      icon: "fingerprint"
     },
     {
       id: 2,
       title: "Preparing Transaction",
       description: "Creating blockchain transaction",
-      icon: "description",
-      duration: 2000
+      icon: "description"
     },
     {
       id: 3,
       title: "Signing Transaction",
       description: "Cryptographically signing with secure wallet",
-      icon: "key",
-      duration: 1000
+      icon: "key"
     },
     {
       id: 4,
       title: "Broadcasting to Network",
       description: "Sending to Ethereum Sepolia testnet",
-      icon: "wifi",
-      duration: 2500
+      icon: "wifi"
     },
     {
       id: 5,
       title: "Waiting for Confirmation",
       description: "Miners validating and including in block",
-      icon: "hourglass_empty",
-      duration: 3000
+      icon: "hourglass_empty"
     },
     {
       id: 6,
       title: "Block Confirmation",
       description: "Transaction confirmed and recorded",
-      icon: "verified",
-      duration: 1500
+      icon: "verified"
     },
     {
       id: 7,
       title: "Storing Metadata",
       description: "Saving proof details to database",
-      icon: "storage",
-      duration: 1000
+      icon: "storage"
     }
   ];
 
   useEffect(() => {
     if (!isActive) {
-      setCurrentStep(0);
       setCompletedSteps([]);
       return;
     }
 
-    let timeoutId;
-    let stepIndex = 0;
-
-    const processStep = () => {
-      if (stepIndex < steps.length) {
-        setCurrentStep(stepIndex);
-        
-        timeoutId = setTimeout(() => {
-          setCompletedSteps(prev => [...prev, stepIndex]);
-          stepIndex++;
-          
-          if (stepIndex < steps.length) {
-            processStep();
-          } else {
-            setTimeout(() => {
-              onComplete?.();
-            }, 500);
-          }
-        }, steps[stepIndex].duration);
+    // Update completed steps based on backend progress
+    if (currentBackendStep > 0) {
+      const newCompletedSteps = [];
+      for (let i = 0; i < currentBackendStep - 1; i++) {
+        newCompletedSteps.push(i);
       }
-    };
-
-    processStep();
-
-    return () => {
-      if (timeoutId) clearTimeout(timeoutId);
-    };
-  }, [isActive, onComplete]);
+      setCompletedSteps(newCompletedSteps);
+    }
+  }, [isActive, currentBackendStep]);
 
   if (!isActive) return null;
 
@@ -113,7 +85,7 @@ const BlockchainTimeline = ({ isActive, onComplete }) => {
         <div className="space-y-4">
           {steps.map((step, index) => {
             const isCompleted = completedSteps.includes(index);
-            const isCurrent = currentStep === index;
+            const isCurrent = currentBackendStep === index + 1;
 
             return (
               <div key={step.id} className="relative flex items-center gap-4">
@@ -162,13 +134,7 @@ const BlockchainTimeline = ({ isActive, onComplete }) => {
                   {/* Simple progress bar for current step */}
                   {isCurrent && (
                     <div className="mt-2 w-full bg-slate-700 rounded-full h-1">
-                      <div 
-                        className="h-1 bg-gradient-to-r from-purple-500 to-violet-500 rounded-full transition-all duration-1000 ease-out"
-                        style={{
-                          width: '100%',
-                          animation: `progress ${step.duration}ms ease-out forwards`
-                        }}
-                      />
+                      <div className="h-1 bg-gradient-to-r from-purple-500 to-violet-500 rounded-full animate-pulse" />
                     </div>
                   )}
                 </div>
@@ -186,9 +152,17 @@ const BlockchainTimeline = ({ isActive, onComplete }) => {
       </div>
 
       <style jsx>{`
-        @keyframes progress {
-          from { width: 0%; }
-          to { width: 100%; }
+        .animate-pulse {
+          animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+        
+        @keyframes pulse {
+          0%, 100% {
+            opacity: 1;
+          }
+          50% {
+            opacity: .5;
+          }
         }
       `}</style>
     </div>
