@@ -4,6 +4,7 @@ import toast from 'react-hot-toast';
 import { useAuth } from '../contexts/AuthContext';
 import { API_ENDPOINTS } from '../config/api';
 import { useAuthenticatedApi } from '../hooks/useAuthenticatedApi';
+import BlockchainTimeline from '../components/BlockchainTimeline';
 
 const CreateProof = () => {
   const { user, login } = useAuth();
@@ -12,6 +13,7 @@ const CreateProof = () => {
   const [textContent, setTextContent] = useState('');
   const [selectedFile, setSelectedFile] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [showTimeline, setShowTimeline] = useState(false);
   const [proof, setProof] = useState(null);
   const [dragActive, setDragActive] = useState(false);
 
@@ -63,6 +65,8 @@ const CreateProof = () => {
     }
     
     setLoading(true);
+    setShowTimeline(true);
+    
     try {
       const data = await makeAuthenticatedCall(
         API_ENDPOINTS.PROOF.CREATE_TEXT,
@@ -73,13 +77,19 @@ const CreateProof = () => {
       );
 
       if (data.success) {
-        setProof(data.proof);
-        toast.success('Proof created successfully!');
+        // Timeline will complete automatically, then show success
+        setTimeout(() => {
+          setProof(data.proof);
+          toast.success('Proof created successfully!');
+          setShowTimeline(false);
+        }, 500);
       } else {
+        setShowTimeline(false);
         toast.error(data.message || 'Failed to create proof');
       }
     } catch (error) {
       console.error('Error creating text proof:', error);
+      setShowTimeline(false);
       toast.error('Failed to create proof. Please try again.');
     } finally {
       setLoading(false);
@@ -98,6 +108,8 @@ const CreateProof = () => {
     }
 
     setLoading(true);
+    setShowTimeline(true);
+    
     try {
       const formData = new FormData();
       formData.append('file', selectedFile);
@@ -112,17 +124,28 @@ const CreateProof = () => {
       );
 
       if (data.success) {
-        setProof(data.proof);
-        toast.success('Proof created successfully!');
+        // Timeline will complete automatically, then show success
+        setTimeout(() => {
+          setProof(data.proof);
+          toast.success('Proof created successfully!');
+          setShowTimeline(false);
+        }, 500);
       } else {
+        setShowTimeline(false);
         toast.error(data.message || 'Failed to create proof');
       }
     } catch (error) {
       console.error('Error creating file proof:', error);
+      setShowTimeline(false);
       toast.error('Failed to create proof. Please try again.');
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleTimelineComplete = () => {
+    // Timeline animation completed, proof should be ready
+    setShowTimeline(false);
   };
 
   const copyToClipboard = (text) => {
@@ -138,7 +161,14 @@ const CreateProof = () => {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   };
   return (
-    <div className="relative z-10 pt-24 lg:pt-32 pb-12 lg:pb-20 px-4 sm:px-6 max-w-7xl mx-auto flex flex-col items-center">
+    <>
+      {/* Blockchain Timeline Modal */}
+      <BlockchainTimeline 
+        isActive={showTimeline} 
+        onComplete={handleTimelineComplete}
+      />
+      
+      <div className="relative z-10 pt-24 lg:pt-32 pb-12 lg:pb-20 px-4 sm:px-6 max-w-7xl mx-auto flex flex-col items-center">
       {/* Background Effects */}
       <div className="fixed inset-0 z-0 overflow-hidden pointer-events-none">
         <div className="absolute top-[-20%] left-[-10%] w-[60%] h-[60%] rounded-full bg-indigo-900/20 blur-[130px]"></div>
@@ -504,7 +534,8 @@ const CreateProof = () => {
           </div>
         </>
       )}
-    </div>
+      </div>
+    </>
   );
 };
 
