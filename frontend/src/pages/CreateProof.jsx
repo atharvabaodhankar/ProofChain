@@ -70,9 +70,17 @@ const CreateProof = () => {
     setCurrentBackendStep(1); // Computing Hash
     
     try {
+      // Give each step time to show as current before moving to next
+      await new Promise(resolve => setTimeout(resolve, 800));
       setCurrentBackendStep(2); // Preparing Transaction
+      
+      await new Promise(resolve => setTimeout(resolve, 600));
       setCurrentBackendStep(3); // Signing Transaction
+      
+      await new Promise(resolve => setTimeout(resolve, 500));
       setCurrentBackendStep(4); // Broadcasting to Network
+      
+      await new Promise(resolve => setTimeout(resolve, 700));
       setCurrentBackendStep(5); // Waiting for Confirmation - this is where the real wait happens
       
       // Make the actual API call - this is where the real blockchain work happens
@@ -86,15 +94,14 @@ const CreateProof = () => {
 
       if (data.success) {
         setCurrentBackendStep(6); // Block Confirmation - only after API succeeds
-        setTimeout(() => {
-          setCurrentBackendStep(7); // Storing Metadata
-          setTimeout(() => {
-            setProof(data.proof);
-            toast.success('Proof created successfully!');
-            setShowTimeline(false);
-            setCurrentBackendStep(0);
-          }, 500);
-        }, 300);
+        await new Promise(resolve => setTimeout(resolve, 500));
+        setCurrentBackendStep(7); // Storing Metadata
+        await new Promise(resolve => setTimeout(resolve, 800));
+        
+        setProof(data.proof);
+        toast.success('Proof created successfully!');
+        setShowTimeline(false);
+        setCurrentBackendStep(0);
       } else {
         setShowTimeline(false);
         setCurrentBackendStep(0);
@@ -126,9 +133,17 @@ const CreateProof = () => {
     setCurrentBackendStep(1); // Computing Hash
     
     try {
+      // Give each step time to show as current before moving to next
+      await new Promise(resolve => setTimeout(resolve, 800));
       setCurrentBackendStep(2); // Preparing Transaction
+      
+      await new Promise(resolve => setTimeout(resolve, 600));
       setCurrentBackendStep(3); // Signing Transaction
+      
+      await new Promise(resolve => setTimeout(resolve, 500));
       setCurrentBackendStep(4); // Broadcasting to Network
+      
+      await new Promise(resolve => setTimeout(resolve, 700));
       setCurrentBackendStep(5); // Waiting for Confirmation - this is where the real wait happens
 
       const formData = new FormData();
@@ -146,15 +161,14 @@ const CreateProof = () => {
 
       if (data.success) {
         setCurrentBackendStep(6); // Block Confirmation - only after API succeeds
-        setTimeout(() => {
-          setCurrentBackendStep(7); // Storing Metadata
-          setTimeout(() => {
-            setProof(data.proof);
-            toast.success('Proof created successfully!');
-            setShowTimeline(false);
-            setCurrentBackendStep(0);
-          }, 500);
-        }, 300);
+        await new Promise(resolve => setTimeout(resolve, 500));
+        setCurrentBackendStep(7); // Storing Metadata
+        await new Promise(resolve => setTimeout(resolve, 800));
+        
+        setProof(data.proof);
+        toast.success('Proof created successfully!');
+        setShowTimeline(false);
+        setCurrentBackendStep(0);
       } else {
         setShowTimeline(false);
         setCurrentBackendStep(0);
