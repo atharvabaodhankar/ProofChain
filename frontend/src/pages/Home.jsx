@@ -1,13 +1,8 @@
-import React, { useEffect, useState } from 'react';
-import { Shield, FileText, CheckCircle, Clock, Lock, Zap, Sparkles, ArrowRight, Star, Globe, Users } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { Shield, FileText, CheckCircle, Clock, Lock, Zap, Sparkles, ArrowRight } from 'lucide-react';
 import AnimatedLink from '../components/AnimatedLink';
 
 const Home = () => {
-  const [isVisible, setIsVisible] = useState(false);
-
-  useEffect(() => {
-    setIsVisible(true);
-  }, []);
 
   const features = [
     {
