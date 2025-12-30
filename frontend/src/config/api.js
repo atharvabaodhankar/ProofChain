@@ -17,11 +17,6 @@ console.log('🏠 Is Localhost:', isLocalhost);
 
 // API endpoints
 export const API_ENDPOINTS = {
-  // Test endpoints
-  TEST: {
-    CORS: `${API_BASE_URL}/test-cors`,
-  },
-  
   // Auth endpoints
   AUTH: {
     VERIFY_TOKEN: `${API_BASE_URL}/auth/verify`,
