@@ -264,10 +264,10 @@ const CreateProof = () => {
       {/* Existing Proof Modal */}
       {showExistingProofModal && existingProof && (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="relative bg-slate-900/90 backdrop-blur-xl border border-amber-500/20 rounded-2xl p-6 sm:p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+          <div className="relative bg-slate-900/90 backdrop-blur-xl border border-purple-500/20 rounded-2xl p-6 sm:p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
             {/* Header */}
             <div className="text-center mb-6">
-              <div className="w-12 h-12 mx-auto mb-4 bg-gradient-to-r from-amber-600 to-orange-600 rounded-full flex items-center justify-center">
+              <div className="w-12 h-12 mx-auto mb-4 bg-gradient-to-r from-purple-600 to-violet-600 rounded-full flex items-center justify-center">
                 <span className="material-symbols-outlined text-white text-xl">info</span>
               </div>
               <h2 className="text-xl font-bold text-white mb-2">Proof Already Exists</h2>
@@ -347,7 +347,7 @@ const CreateProof = () => {
                   setTextContent('');
                   setSelectedFile(null);
                 }}
-                className="flex-1 bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 text-white shadow-lg shadow-amber-500/25 py-3 px-6 rounded-xl font-medium transition-all text-sm sm:text-base"
+                className="flex-1 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white shadow-lg shadow-indigo-500/25 py-3 px-6 rounded-xl font-medium transition-all text-sm sm:text-base"
               >
                 Try Different Content
               </button>
