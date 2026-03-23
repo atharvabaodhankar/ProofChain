@@ -1,50 +1,63 @@
 const { ethers } = require("hardhat");
+const fs = require("fs");
+const path = require("path");
 
 async function main() {
-  console.log("Deploying ProofOfExistence contract to Sepolia...");
-
-  // Get the deployer account
   const [deployer] = await ethers.getSigners();
-  console.log("Deploying with account:", deployer.address);
+  const balance = await ethers.provider.getBalance(deployer.address);
 
-  // Get account balance
-  const balance = await deployer.provider.getBalance(deployer.address);
-  console.log("Account balance:", ethers.formatEther(balance), "ETH");
+  console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+  console.log("Deploying ProofOfExistence to Polygon Amoy");
+  console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+  console.log("Deployer :", deployer.address);
+  console.log("Balance  :", ethers.formatEther(balance), "POL");
+  console.log("");
 
-  // Deploy the contract
+  // Deploy
   const ProofOfExistence = await ethers.getContractFactory("ProofOfExistence");
-  const proofOfExistence = await ProofOfExistence.deploy();
+  console.log("Deploying contract...");
+  const contract = await ProofOfExistence.deploy();
+  await contract.waitForDeployment();
 
-  await proofOfExistence.waitForDeployment();
-  const contractAddress = await proofOfExistence.getAddress();
+  const contractAddress = await contract.getAddress();
+  const deployTx = contract.deploymentTransaction();
 
-  console.log("ProofOfExistence deployed to:", contractAddress);
-  console.log("Transaction hash:", proofOfExistence.deploymentTransaction().hash);
+  console.log("");
+  console.log("✅ Deployed successfully!");
+  console.log("Contract address :", contractAddress);
+  console.log("Transaction hash :", deployTx.hash);
+  console.log("Explorer         :", `https://amoy.polygonscan.com/address/${contractAddress}`);
+  console.log("");
 
-  // Save deployment info
+  // Wait 5 blocks then verify
+  console.log("Waiting for 5 confirmations before verification...");
+  await deployTx.wait(5);
+  console.log("5 confirmations reached.");
+  console.log("");
+
+  // Save deployment info to a JSON file
   const deploymentInfo = {
-    contractAddress: contractAddress,
-    network: "sepolia",
-    deployer: deployer.address,
-    deploymentTime: new Date().toISOString(),
-    transactionHash: proofOfExistence.deploymentTransaction().hash
+    contractAddress,
+    deployer:        deployer.address,
+    transactionHash: deployTx.hash,
+    network:         "polygonAmoy",
+    chainId:         80002,
+    deployedAt:      new Date().toISOString(),
   };
 
-  console.log("\nDeployment Info:");
-  console.log(JSON.stringify(deploymentInfo, null, 2));
+  const outputPath = path.join(__dirname, "../deployment.json");
+  fs.writeFileSync(outputPath, JSON.stringify(deploymentInfo, null, 2));
+  console.log("Deployment info saved to contracts/deployment.json");
+  console.log("");
 
-  // Wait for a few confirmations before verification
-  console.log("\nWaiting for confirmations...");
-  await proofOfExistence.deploymentTransaction().wait(5);
-
-  console.log("\nContract deployed successfully!");
-  console.log("You can verify it with:");
-  console.log(`npx hardhat verify --network sepolia ${contractAddress}`);
+  // Tell them exactly what to copy into .env
+  console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+  console.log("Copy this into your .env file:");
+  console.log(`CONTRACT_ADDRESS=${contractAddress}`);
+  console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
 }
 
-main()
-  .then(() => process.exit(0))
-  .catch((error) => {
-    console.error(error);
-    process.exit(1);
-  });
+main().catch((err) => {
+  console.error(err);
+  process.exit(1);
+});
