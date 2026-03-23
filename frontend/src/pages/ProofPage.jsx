@@ -1,6 +1,6 @@
-import { useState, useEffect } from "react";
-import { useSmartAccount }  from "../hooks/useSmartAccount";
-import { useGaslessProof }  from "../hooks/useGaslessProof";
+import { useState, useEffect }  from "react";
+import { useSmartAccount }      from "../hooks/useSmartAccount";
+import { useGaslessProof }      from "../hooks/useGaslessProof";
 
 export default function ProofPage() {
   const {
@@ -8,28 +8,34 @@ export default function ProofPage() {
     logout,
     authenticated,
     user,
+    embeddedWallet,        // ← this was missing
     initSmartAccount,
     smartAccountAddress,
-    nexusClient,pimlicoClient,
+    nexusClient,
+    pimlicoClient,
     loading:   accountLoading,
     error:     accountError,
     isReady,
   } = useSmartAccount();
 
-  // NEW
-const { submitProof, loading: proofLoading, error: proofError, result } = useGaslessProof(nexusClient, pimlicoClient);
+  const {
+    submitProof,
+    loading: proofLoading,
+    error:   proofError,
+    result,
+  } = useGaslessProof(nexusClient, pimlicoClient);
 
   const [text,        setText]        = useState("");
   const [creatorName, setCreatorName] = useState("");
 
-  // Once user authenticates — auto-init the Smart Account
+  // Wait for BOTH authenticated AND embeddedWallet before init
   useEffect(() => {
-    if (authenticated) {
+    if (authenticated && embeddedWallet) {
       initSmartAccount();
     }
-  }, [authenticated, initSmartAccount]);
+  }, [authenticated, embeddedWallet, initSmartAccount]);
 
-  // Pre-fill creator name from Privy user info
+  // Pre-fill creator name from Privy user
   useEffect(() => {
     if (user?.google?.name) {
       setCreatorName(user.google.name);
@@ -43,11 +49,11 @@ const { submitProof, loading: proofLoading, error: proofError, result } = useGas
     try {
       await submitProof(text.trim(), creatorName.trim());
     } catch {
-      // error already set in hook
+      // error already in hook state
     }
   };
 
-  // ── NOT LOGGED IN ──────────────────────────────────────────────
+  // ── NOT LOGGED IN ─────────────────────────────────────────────
   if (!authenticated) {
     return (
       <div className="min-h-screen bg-slate-950 flex items-center justify-center px-4">
@@ -68,15 +74,15 @@ const { submitProof, loading: proofLoading, error: proofError, result } = useGas
             <div className="space-y-3">
               {[
                 ["1", "Sign in with Google or email"],
-                ["2", "Your Smart Account is created automatically"],
+                ["2", "Smart Account created automatically — no MetaMask"],
                 ["3", "Submit any text — hashed and stored on-chain"],
-                ["4", "Gas is paid by us — you pay nothing"],
-              ].map(([num, text]) => (
+                ["4", "Gas paid by us — you pay nothing, ever"],
+              ].map(([num, label]) => (
                 <div key={num} className="flex items-center gap-3">
                   <span className="w-6 h-6 rounded-full bg-violet-600 text-white text-xs flex items-center justify-center font-bold flex-shrink-0">
                     {num}
                   </span>
-                  <span className="text-slate-400 text-sm">{text}</span>
+                  <span className="text-slate-400 text-sm">{label}</span>
                 </div>
               ))}
             </div>
@@ -90,23 +96,25 @@ const { submitProof, loading: proofLoading, error: proofError, result } = useGas
           </button>
 
           <p className="text-slate-600 text-xs">
-            ERC-4337 Account Abstraction · Polygon Amoy · Powered by Biconomy + Privy
+            ERC-4337 Account Abstraction · Polygon Amoy · Biconomy + Privy + Pimlico
           </p>
         </div>
       </div>
     );
   }
 
-  // ── LOGGED IN — INITIALISING SMART ACCOUNT ─────────────────────
+  // ── LOGGED IN — SMART ACCOUNT INITIALISING ────────────────────
   if (authenticated && !isReady) {
     return (
       <div className="min-h-screen bg-slate-950 flex items-center justify-center">
         <div className="text-center space-y-4">
           <div className="w-12 h-12 border-2 border-violet-500/30 border-t-violet-500 rounded-full animate-spin mx-auto" />
-          <p className="text-slate-400">
-            {accountLoading
-              ? "Setting up your Smart Account..."
-              : "Connecting..."}
+          <p className="text-slate-400 text-sm">
+            {!embeddedWallet
+              ? "Creating your embedded wallet..."
+              : accountLoading
+                ? "Setting up your Smart Account..."
+                : "Connecting..."}
           </p>
           {accountError && (
             <div className="max-w-sm bg-red-950/50 border border-red-800 rounded-xl p-4">
@@ -124,7 +132,7 @@ const { submitProof, loading: proofLoading, error: proofError, result } = useGas
     );
   }
 
-  // ── MAIN APP ───────────────────────────────────────────────────
+  // ── MAIN APP ──────────────────────────────────────────────────
   return (
     <div className="min-h-screen bg-slate-950 px-4 py-12">
       <div className="max-w-2xl mx-auto space-y-6">
@@ -142,7 +150,7 @@ const { submitProof, loading: proofLoading, error: proofError, result } = useGas
           </button>
         </div>
 
-        {/* Smart Account info card */}
+        {/* Smart Account info */}
         <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-3">
           <div className="flex items-center gap-2">
             <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
@@ -150,7 +158,6 @@ const { submitProof, loading: proofLoading, error: proofError, result } = useGas
               Smart Account Active
             </span>
           </div>
-
           <div className="space-y-2">
             <div>
               <p className="text-slate-600 text-xs mb-1">Signed in as</p>
@@ -159,24 +166,21 @@ const { submitProof, loading: proofLoading, error: proofError, result } = useGas
               </p>
             </div>
             <div>
-              <p className="text-slate-600 text-xs mb-1">
-                Your Smart Account address
-              </p>
+              <p className="text-slate-600 text-xs mb-1">Smart Account address</p>
               <p className="text-slate-300 text-xs font-mono break-all">
                 {smartAccountAddress}
               </p>
             </div>
           </div>
-
           <div className="pt-1 border-t border-slate-800">
             <p className="text-slate-600 text-xs">
-              This address is your on-chain identity. Same Google login on any
-              device = same address. Gas is sponsored — your balance: 0 POL needed.
+              Same Google login on any device = same address.
+              Gas is sponsored — your balance: 0 POL needed.
             </p>
           </div>
         </div>
 
-        {/* Proof form — only show if no result yet */}
+        {/* Proof form */}
         {!result && (
           <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-4">
             <h2 className="text-white font-semibold">Create a Proof</h2>
@@ -193,19 +197,17 @@ const { submitProof, loading: proofLoading, error: proofError, result } = useGas
             </div>
 
             <div className="space-y-2">
-              <label className="text-slate-400 text-sm">
-                Content to timestamp
-              </label>
+              <label className="text-slate-400 text-sm">Content to timestamp</label>
               <textarea
                 value={text}
                 onChange={e => setText(e.target.value)}
-                placeholder="Enter any text — a document hash, a claim, an idea, a contract..."
+                placeholder="Enter any text — a document, a claim, an idea..."
                 rows={5}
                 className="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-white placeholder:text-slate-600 focus:outline-none focus:border-violet-500 transition-colors text-sm resize-none"
               />
               <p className="text-slate-600 text-xs">
-                A SHA-256 hash of this text will be stored on Polygon Amoy.
-                The original text never leaves your browser.
+                A SHA-256 hash of this text is stored on Polygon Amoy.
+                Original text never leaves your browser.
               </p>
             </div>
 
@@ -232,7 +234,7 @@ const { submitProof, loading: proofLoading, error: proofError, result } = useGas
           </div>
         )}
 
-        {/* Result card */}
+        {/* Result */}
         {result && (
           <div className="bg-emerald-950/40 border border-emerald-800 rounded-2xl p-5 space-y-4">
             <div className="flex items-center gap-2">
@@ -246,14 +248,11 @@ const { submitProof, loading: proofLoading, error: proofError, result } = useGas
               {[
                 ["Creator",          result.creatorName],
                 ["SHA-256 Hash",     result.dataHash],
-                ["UserOp Hash",      result.userOpHash],
                 ["Transaction Hash", result.transactionHash],
               ].map(([label, value]) => (
                 <div key={label}>
                   <p className="text-slate-500 text-xs mb-1">{label}</p>
-                  <p className="text-slate-300 text-xs font-mono break-all">
-                    {value}
-                  </p>
+                  <p className="text-slate-300 text-xs font-mono break-all">{value}</p>
                 </div>
               ))}
             </div>
@@ -262,16 +261,13 @@ const { submitProof, loading: proofLoading, error: proofError, result } = useGas
               href={result.explorerUrl}
               target="_blank"
               rel="noreferrer"
-              className="block w-full py-3 bg-emerald-800/50 hover:bg-emerald-800 border border-emerald-700 text-emerald-300 text-sm font-medium rounded-xl text-center transition-colors duration-200"
+              className="block w-full py-3 bg-emerald-800/50 hover:bg-emerald-800 border border-emerald-700 text-emerald-300 text-sm font-medium rounded-xl text-center transition-colors"
             >
               View on Polygonscan →
             </a>
 
             <button
-              onClick={() => {
-                setText("");
-                setResult(null);
-              }}
+              onClick={() => { setText(""); setResult(null); }}
               className="w-full py-3 text-slate-500 hover:text-slate-300 text-sm transition-colors"
             >
               Create another proof

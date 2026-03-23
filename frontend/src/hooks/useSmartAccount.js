@@ -1,7 +1,6 @@
 import { useState, useCallback } from "react";
-import { usePrivy }         from "@privy-io/react-auth";
-import { useWalletClient }  from "wagmi";
-import { createPublicClient, http } from "viem";
+import { usePrivy, useWallets }  from "@privy-io/react-auth";
+import { createPublicClient, createWalletClient, http, custom } from "viem";
 import { polygonAmoy }              from "viem/chains";
 import { createSmartAccountClient } from "permissionless";
 import { toSimpleSmartAccount }     from "permissionless/accounts";
@@ -14,7 +13,7 @@ const PIMLICO_URL     = `https://api.pimlico.io/v2/80002/rpc?apikey=${PIMLICO_AP
 
 export function useSmartAccount() {
   const { login, logout, authenticated, user } = usePrivy();
-  const { data: walletClient }                 = useWalletClient();
+  const { wallets }                            = useWallets();
 
   const [smartAccountAddress, setSmartAccountAddress] = useState(null);
   const [smartAccountClient,  setSmartAccountClient]  = useState(null);
@@ -22,14 +21,35 @@ export function useSmartAccount() {
   const [loading,             setLoading]             = useState(false);
   const [error,               setError]               = useState(null);
 
+  // Find Privy embedded wallet from the wallets array
+  const embeddedWallet = wallets.find(
+    w => w.walletClientType === "privy"
+  );
+
   const initSmartAccount = useCallback(async () => {
-    if (!authenticated || !walletClient) return;
+    // Guard — both must be true before we proceed
+    if (!authenticated)   return;
+    if (!embeddedWallet)  return; // wallet not ready yet — useEffect will retry
 
     setLoading(true);
     setError(null);
 
     try {
-      console.log("Setting up Smart Account...");
+      console.log("Privy embedded wallet found:", embeddedWallet.address);
+      console.log("Setting up Smart Account — no MetaMask will open...");
+
+      // Switch to Polygon Amoy
+      await embeddedWallet.switchChain(80002);
+
+      // Get provider from embedded wallet
+      const provider = await embeddedWallet.getEthereumProvider();
+
+      // Wallet client from embedded wallet — signs silently, no popup
+      const walletClient = createWalletClient({
+        account:   embeddedWallet.address,
+        chain:     polygonAmoy,
+        transport: custom(provider),
+      });
 
       const publicClient = createPublicClient({
         chain:     polygonAmoy,
@@ -53,21 +73,20 @@ export function useSmartAccount() {
         },
       });
 
-      console.log("Smart Account address:", smartAccount.address);
-
       const client = createSmartAccountClient({
         account:          smartAccount,
         chain:            polygonAmoy,
         bundlerTransport: http(PIMLICO_URL),
         paymaster:        pimlico,
-        // no paymasterContext — Pimlico sponsors testnet gas automatically
       });
 
       setPimlicoClient(pimlico);
       setSmartAccountClient(client);
       setSmartAccountAddress(smartAccount.address);
 
-      console.log("✅ Smart Account ready — no MetaMask, no gas needed");
+      console.log("✅ Smart Account ready:", smartAccount.address);
+      console.log("   Zero MetaMask. Zero gas. Pure ERC-4337.");
+
       return { client, address: smartAccount.address };
 
     } catch (err) {
@@ -77,7 +96,7 @@ export function useSmartAccount() {
     } finally {
       setLoading(false);
     }
-  }, [authenticated, walletClient]);
+  }, [authenticated, embeddedWallet]);
 
   const handleLogout = useCallback(async () => {
     await logout();
@@ -89,9 +108,11 @@ export function useSmartAccount() {
 
   return {
     login,
-    logout:      handleLogout,
+    logout:       handleLogout,
     authenticated,
     user,
+    wallets,          // expose so ProofPage can watch it
+    embeddedWallet,   // expose so ProofPage knows when it's ready
     initSmartAccount,
     smartAccountAddress,
     nexusClient:  smartAccountClient,
