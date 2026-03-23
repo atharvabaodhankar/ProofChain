@@ -10,18 +10,14 @@ export default function ProofPage() {
     user,
     initSmartAccount,
     smartAccountAddress,
-    nexusClient,
+    nexusClient,pimlicoClient,
     loading:   accountLoading,
     error:     accountError,
     isReady,
   } = useSmartAccount();
 
-  const {
-    submitProof,
-    loading: proofLoading,
-    error:   proofError,
-    result,
-  } = useGaslessProof(nexusClient);
+  // NEW
+const { submitProof, loading: proofLoading, error: proofError, result } = useGaslessProof(nexusClient, pimlicoClient);
 
   const [text,        setText]        = useState("");
   const [creatorName, setCreatorName] = useState("");
