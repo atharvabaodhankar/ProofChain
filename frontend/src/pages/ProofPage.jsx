@@ -29,11 +29,11 @@ export default function ProofPage() {
   const [creatorName, setCreatorName] = useState("");
 
   // Wait for BOTH authenticated AND embeddedWallet before init
-  useEffect(() => {
-    if (authenticated && embeddedWallet) {
-      initSmartAccount();
-    }
-  }, [authenticated, embeddedWallet, initSmartAccount]);
+useEffect(() => {
+  if (authenticated) {
+    initSmartAccount();
+  }
+}, [authenticated, initSmartAccount]);
 
   // Pre-fill creator name from Privy user
   useEffect(() => {
