@@ -5,11 +5,13 @@ import { polygonAmoy } from "viem/chains";
 import { createSmartAccountClient } from "permissionless";
 import { toSimpleSmartAccount } from "permissionless/accounts";
 import { createPimlicoClient } from "permissionless/clients/pimlico";
-import { entryPoint07Address } from "viem/account-abstraction";
 
 const PIMLICO_API_KEY = import.meta.env.VITE_PIMLICO_API_KEY;
 const RPC_URL = import.meta.env.VITE_POLYGON_AMOY_RPC_URL;
 const PIMLICO_URL = `https://api.pimlico.io/v2/80002/rpc?apikey=${PIMLICO_API_KEY}`;
+
+// EntryPoint v0.7 address (canonical across all networks)
+const ENTRYPOINT_ADDRESS = "0x0000000071727De22E5E9d8BAf0edAc6f37da032";
 
 export function useSmartAccount() {
   const { login, logout, authenticated, user, ready } = usePrivy();
@@ -100,13 +102,13 @@ export function useSmartAccount() {
 
       const pimlico = createPimlicoClient({
         transport: http(PIMLICO_URL),
-        entryPoint: { address: entryPoint07Address, version: "0.7" },
+        entryPoint: { address: ENTRYPOINT_ADDRESS, version: "0.7" },
       });
 
       const smartAccount = await toSimpleSmartAccount({
         client: publicClient,
         owner: walletClient,
-        entryPoint: { address: entryPoint07Address, version: "0.7" },
+        entryPoint: { address: ENTRYPOINT_ADDRESS, version: "0.7" },
       });
 
       const client = createSmartAccountClient({

@@ -18,12 +18,12 @@
     "firebase": "^10.7.1",
     "framer-motion": "^12.23.26",
     "lucide-react": "^0.294.0",
-    "permissionless": "^0.3.4",
+    "permissionless": "^0.2.57",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-hot-toast": "^2.4.1",
     "react-router-dom": "^6.20.1",
-    "viem": "2.47.4",
+    "viem": "^2.21.0",
     "wagmi": "^3.5.0"
   },
   "devDependencies": {
