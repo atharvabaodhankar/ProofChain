@@ -1,5 +1,5 @@
 import { useState, useCallback, useRef }            from "react";
-import { usePrivy, useWallets, useCreateWallet }    from "@privy-io/react-auth";
+import { usePrivy, useWallets }    from "@privy-io/react-auth";
 import { createPublicClient, createWalletClient, http, custom } from "viem";
 import { polygonAmoy }              from "viem/chains";
 import { createSmartAccountClient } from "permissionless";
@@ -14,7 +14,6 @@ const PIMLICO_URL     = `https://api.pimlico.io/v2/80002/rpc?apikey=${PIMLICO_AP
 export function useSmartAccount() {
   const { login, logout, authenticated, user } = usePrivy();
   const { wallets }                            = useWallets();
-  const { createWallet }                       = useCreateWallet();
 
   const [smartAccountAddress, setSmartAccountAddress] = useState(null);
   const [smartAccountClient,  setSmartAccountClient]  = useState(null);
@@ -27,6 +26,7 @@ export function useSmartAccount() {
 
   const initSmartAccount = useCallback(async () => {
     if (!authenticated)       return;
+    if (!wallets || wallets.length === 0) return; // wait for wallets to load
     if (initCalledRef.current) return; // already ran or running
     initCalledRef.current = true;      // lock immediately
 
@@ -34,20 +34,15 @@ export function useSmartAccount() {
     setError(null);
 
     try {
-      // Find Privy embedded wallet
-      let wallet = wallets.find(
+      // Find Privy embedded wallet (already created by PrivyProvider config)
+      const wallet = wallets.find(
         w => w.walletClientType === "privy" ||
              w.connectorType    === "embedded"
       );
 
-      // Not found — create it explicitly
       if (!wallet) {
-        console.log("Creating Privy embedded wallet...");
-        wallet = await createWallet();
-        console.log("Created:", wallet?.address);
+        throw new Error("No embedded wallet found. Please ensure you're logged in.");
       }
-
-      if (!wallet) throw new Error("Failed to get embedded wallet.");
 
       console.log("Using embedded wallet:", wallet.address);
 
@@ -96,7 +91,7 @@ export function useSmartAccount() {
     } finally {
       setLoading(false);
     }
-  }, [authenticated]); // ← only authenticated, nothing that changes mid-run
+  }, [authenticated, wallets]); // ← wait for both auth and wallets to be ready
 
   const handleLogout = useCallback(async () => {
     await logout();
