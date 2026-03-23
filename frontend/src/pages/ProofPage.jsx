@@ -28,13 +28,6 @@ export default function ProofPage() {
   const [text,        setText]        = useState("");
   const [creatorName, setCreatorName] = useState("");
 
-  // Wait for authenticated before initializing smart account
-  useEffect(() => {
-    if (authenticated) {
-      initSmartAccount();
-    }
-  }, [authenticated, initSmartAccount]);
-
   // Pre-fill creator name from Privy user
   useEffect(() => {
     if (user?.google?.name) {
@@ -125,6 +118,12 @@ export default function ProofPage() {
               </button>
             </div>
           )}
+          <button
+            onClick={logout}
+            className="text-slate-500 hover:text-slate-300 text-xs underline"
+          >
+            Sign out and try again
+          </button>
         </div>
       </div>
     );
