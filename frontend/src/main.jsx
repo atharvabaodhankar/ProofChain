@@ -6,6 +6,7 @@ import { PrivyProvider } from "@privy-io/react-auth";
 import { WagmiProvider, createConfig } from "@privy-io/wagmi";
 import { polygonAmoy } from "viem/chains";
 import { http } from "viem";
+import { Toaster } from "react-hot-toast";
 import App from "./App";
 import "./index.css";
 
@@ -48,6 +49,17 @@ ReactDOM.createRoot(document.getElementById("root")).render(
               v7_relativeSplatPath: true,
             }}
           >
+            <Toaster
+              position="top-right"
+              toastOptions={{
+                duration: 4000,
+                style: {
+                  background: '#1e293b',
+                  color: '#f1f5f9',
+                  border: '1px solid rgba(255, 255, 255, 0.1)',
+                },
+              }}
+            />
             <App />
           </BrowserRouter>
         </WagmiProvider>

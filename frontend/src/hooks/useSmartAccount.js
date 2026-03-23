@@ -39,7 +39,7 @@ export function useSmartAccount() {
     console.log("Wallets available:", wallets.length, wallets);
 
     // If no wallets and we haven't tried creating one yet, try to create
-    if ((!wallets || wallets.length === 0) && !walletCreationAttempted.current) {
+    if ((!wallets || wallets.length === 0) && !walletCreationAttempted.current && authenticated && ready) {
       console.log("No wallets found, attempting to create embedded wallet...");
       walletCreationAttempted.current = true;
       try {
@@ -48,7 +48,10 @@ export function useSmartAccount() {
         return; // Wait for next effect run after wallet is created
       } catch (err) {
         console.error("Failed to create wallet:", err);
-        setError("Failed to create wallet. Please try logging out and back in.");
+        // Don't set error if wallet already exists - this is expected
+        if (!err.message.includes('already has')) {
+          setError("Failed to create wallet. Please try logging out and back in.");
+        }
         return;
       }
     }

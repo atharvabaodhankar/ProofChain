@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import { useLocation } from 'react-router-dom';
-import { Shield, User, LogOut, Sparkles, Menu, X } from 'lucide-react';
-import { useAuth } from '../contexts/AuthContext';
+import { User, LogOut, Menu, X } from 'lucide-react';
+import { useSmartAccount } from '../hooks/useSmartAccount';
 import AnimatedLink from './AnimatedLink';
 
 const Navbar = () => {
-  const { user, login, logout } = useAuth();
+  const { user, login, logout, authenticated } = useSmartAccount();
   const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -16,7 +16,6 @@ const Navbar = () => {
     { path: '/create', label: 'Create Proof' },
     { path: '/verify', label: 'Verify' },
     { path: '/dashboard', label: 'Dashboard' },
-    { path: '/history', label: 'History' }
   ];
 
   const closeMobileMenu = () => setMobileMenuOpen(false);
@@ -59,13 +58,13 @@ const Navbar = () => {
 
             {/* Desktop Auth */}
             <div className="flex items-center space-x-4">
-              {user ? (
+              {authenticated ? (
                 <div className="flex items-center space-x-4">
                   <div className="flex items-center space-x-3 px-3 lg:px-4 py-2 bg-white/5 hover:bg-white/10 rounded-lg border border-white/5 transition-all">
-                    {user.photoURL ? (
+                    {user?.google?.picture ? (
                       <img
-                        src={user.photoURL}
-                        alt={user.displayName}
+                        src={user.google.picture}
+                        alt={user.google.name}
                         className="h-7 w-7 lg:h-8 lg:w-8 rounded-full ring-2 ring-indigo-400/50"
                       />
                     ) : (
@@ -74,7 +73,7 @@ const Navbar = () => {
                       </div>
                     )}
                     <span className="text-sm font-medium text-white hidden xl:block">
-                      {user.displayName || user.email}
+                      {user?.google?.name || user?.email?.address || 'User'}
                     </span>
                   </div>
                   <button
@@ -98,12 +97,12 @@ const Navbar = () => {
 
           {/* Mobile menu button */}
           <div className="lg:hidden flex items-center space-x-2">
-            {user && (
+            {authenticated && (
               <div className="flex items-center space-x-2">
-                {user.photoURL ? (
+                {user?.google?.picture ? (
                   <img
-                    src={user.photoURL}
-                    alt={user.displayName}
+                    src={user.google.picture}
+                    alt={user.google.name}
                     className="h-7 w-7 rounded-full ring-2 ring-indigo-400/50"
                   />
                 ) : (
@@ -143,13 +142,13 @@ const Navbar = () => {
               
               {/* Mobile Auth */}
               <div className="pt-4 border-t border-white/10 mt-4">
-                {user ? (
+                {authenticated ? (
                   <div className="space-y-2">
                     <div className="px-3 py-2">
                       <p className="text-sm font-medium text-white">
-                        {user.displayName || user.email}
+                        {user?.google?.name || user?.email?.address || 'User'}
                       </p>
-                      <p className="text-xs text-slate-400">{user.email}</p>
+                      <p className="text-xs text-slate-400">{user?.google?.email || user?.email?.address}</p>
                     </div>
                     <button
                       onClick={() => {
