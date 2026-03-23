@@ -1,5 +1,5 @@
-import { useState, useCallback }            from "react";
-import { usePrivy, useWallets, useCreateWallet } from "@privy-io/react-auth";
+import { useState, useCallback, useRef }            from "react";
+import { usePrivy, useWallets, useCreateWallet }    from "@privy-io/react-auth";
 import { createPublicClient, createWalletClient, http, custom } from "viem";
 import { polygonAmoy }              from "viem/chains";
 import { createSmartAccountClient } from "permissionless";
@@ -22,55 +22,38 @@ export function useSmartAccount() {
   const [loading,             setLoading]             = useState(false);
   const [error,               setError]               = useState(null);
 
-  // Find embedded wallet — Privy v3 uses walletClientType "privy"
-  // but it must be explicitly created first
-  const embeddedWallet = wallets.find(
-    w => w.walletClientType === "privy" ||
-         w.connectorType    === "embedded"
-  );
+  // Guard — prevents re-running after createWallet() updates wallets[]
+  const initCalledRef = useRef(false);
 
   const initSmartAccount = useCallback(async () => {
-    if (!authenticated) return;
+    if (!authenticated)       return;
+    if (initCalledRef.current) return; // already ran or running
+    initCalledRef.current = true;      // lock immediately
 
     setLoading(true);
     setError(null);
 
     try {
-      let wallet = embeddedWallet;
+      // Find Privy embedded wallet
+      let wallet = wallets.find(
+        w => w.walletClientType === "privy" ||
+             w.connectorType    === "embedded"
+      );
 
-      // If no embedded wallet yet — create it explicitly
-      // Privy v3 requires this call even with createOnLogin: "all-users"
+      // Not found — create it explicitly
       if (!wallet) {
-        console.log("No embedded wallet found — creating one now...");
-        try {
-          const created = await createWallet();
-          wallet = created;
-          console.log("Embedded wallet created:", created?.address);
-        } catch (createErr) {
-          // If creation fails because wallet already exists, try finding it again
-          console.log("Create wallet response:", createErr.message);
-          // Re-check wallets array after creation attempt
-          const fresh = wallets.find(
-            w => w.walletClientType === "privy" ||
-                 w.connectorType    === "embedded"
-          );
-          if (fresh) {
-            wallet = fresh;
-          } else {
-            throw new Error("Could not create or find embedded wallet: " + createErr.message);
-          }
-        }
+        console.log("Creating Privy embedded wallet...");
+        wallet = await createWallet();
+        console.log("Created:", wallet?.address);
       }
 
-      console.log("Using wallet:", wallet.address, "type:", wallet.walletClientType);
+      if (!wallet) throw new Error("Failed to get embedded wallet.");
 
-      // Switch to Polygon Amoy
+      console.log("Using embedded wallet:", wallet.address);
+
       await wallet.switchChain(80002);
-
-      // Get EIP-1193 provider from embedded wallet
       const provider = await wallet.getEthereumProvider();
 
-      // Create wallet client — signs silently, zero popups
       const walletClient = createWalletClient({
         account:   wallet.address,
         chain:     polygonAmoy,
@@ -84,19 +67,13 @@ export function useSmartAccount() {
 
       const pimlico = createPimlicoClient({
         transport: http(PIMLICO_URL),
-        entryPoint: {
-          address: entryPoint07Address,
-          version: "0.7",
-        },
+        entryPoint: { address: entryPoint07Address, version: "0.7" },
       });
 
       const smartAccount = await toSimpleSmartAccount({
         client:     publicClient,
         owner:      walletClient,
-        entryPoint: {
-          address: entryPoint07Address,
-          version: "0.7",
-        },
+        entryPoint: { address: entryPoint07Address, version: "0.7" },
       });
 
       const client = createSmartAccountClient({
@@ -111,22 +88,19 @@ export function useSmartAccount() {
       setSmartAccountAddress(smartAccount.address);
 
       console.log("✅ Smart Account ready:", smartAccount.address);
-      console.log("   Signer (embedded):", wallet.address);
-      console.log("   Zero MetaMask. Zero gas. Pure ERC-4337.");
-
-      return { client, address: smartAccount.address };
 
     } catch (err) {
-      console.error("Smart Account init failed:", err.message);
+      console.error("Init failed:", err.message);
       setError(err.message);
-      throw err;
+      initCalledRef.current = false; // allow retry on error
     } finally {
       setLoading(false);
     }
-  }, [authenticated, wallets, embeddedWallet, createWallet]);
+  }, [authenticated]); // ← only authenticated, nothing that changes mid-run
 
   const handleLogout = useCallback(async () => {
     await logout();
+    initCalledRef.current = false; // reset so next login works
     setSmartAccountAddress(null);
     setSmartAccountClient(null);
     setPimlicoClient(null);
@@ -138,8 +112,6 @@ export function useSmartAccount() {
     logout:       handleLogout,
     authenticated,
     user,
-    wallets,
-    embeddedWallet,
     initSmartAccount,
     smartAccountAddress,
     nexusClient:  smartAccountClient,
