@@ -9,6 +9,9 @@ export default defineConfig({
       "@noble/curves/nist.js": "@noble/curves/nist",
     },
   },
+  define: {
+    global: 'globalThis',
+  },
   optimizeDeps: {
     include: [
       "permissionless",

@@ -8,7 +8,6 @@ export default function ProofPage() {
     logout,
     authenticated,
     user,
-    embeddedWallet,        // ← this was missing
     initSmartAccount,
     smartAccountAddress,
     nexusClient,
@@ -23,17 +22,18 @@ export default function ProofPage() {
     loading: proofLoading,
     error:   proofError,
     result,
+    resetResult,
   } = useGaslessProof(nexusClient, pimlicoClient);
 
   const [text,        setText]        = useState("");
   const [creatorName, setCreatorName] = useState("");
 
-  // Wait for BOTH authenticated AND embeddedWallet before init
-useEffect(() => {
-  if (authenticated) {
-    initSmartAccount();
-  }
-}, [authenticated, initSmartAccount]);
+  // Wait for authenticated before initializing smart account
+  useEffect(() => {
+    if (authenticated) {
+      initSmartAccount();
+    }
+  }, [authenticated, initSmartAccount]);
 
   // Pre-fill creator name from Privy user
   useEffect(() => {
@@ -110,11 +110,9 @@ useEffect(() => {
         <div className="text-center space-y-4">
           <div className="w-12 h-12 border-2 border-violet-500/30 border-t-violet-500 rounded-full animate-spin mx-auto" />
           <p className="text-slate-400 text-sm">
-            {!embeddedWallet
-              ? "Creating your embedded wallet..."
-              : accountLoading
-                ? "Setting up your Smart Account..."
-                : "Connecting..."}
+            {accountLoading
+              ? "Setting up your Smart Account..."
+              : "Connecting..."}
           </p>
           {accountError && (
             <div className="max-w-sm bg-red-950/50 border border-red-800 rounded-xl p-4">
@@ -267,7 +265,7 @@ useEffect(() => {
             </a>
 
             <button
-              onClick={() => { setText(""); setResult(null); }}
+              onClick={() => { setText(""); setCreatorName(""); resetResult(); }}
               className="w-full py-3 text-slate-500 hover:text-slate-300 text-sm transition-colors"
             >
               Create another proof

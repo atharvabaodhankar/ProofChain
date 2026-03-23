@@ -86,5 +86,5 @@ export function useGaslessProof(smartAccountClient, pimlicoClient) {
     }
   }, [smartAccountClient, pimlicoClient]);
 
-  return { submitProof, loading, error, result };
+  return { submitProof, loading, error, result, resetResult: () => setResult(null) };
 }
